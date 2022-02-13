@@ -15,6 +15,7 @@ int print(char* var);
 int run(char* script);
 int badcommandFileDoesNotExist();
 int badcommandTooManyTokens();
+int _echo(char* token);
 int my_ls();
 
 // Interpret commands and their arguments
@@ -67,7 +68,7 @@ int interpreter(char* command_args[], int args_size){
 		
 	} else if (strcmp(command_args[0], "echo")==0) {
 		if (args_size != 2) return badcommand();
-		return echo(command_args[1]);
+		return _echo(command_args[1]);
 	
 	} else if (strcmp(command_args[0], "my_ls")==0) {
 		if (args_size != 1) return badcommand();
@@ -141,7 +142,8 @@ int run(char* script){
 
 	fgets(line,999,p);
 	while(1){
-		errCode = parseInput(line);	// which calls interpreter()
+		// errCode = parseInput(line);	// which calls interpreter()
+		errCode = oneLiner(line);
 		memset(line, 0, sizeof(line));
 
 		if(feof(p)){
@@ -155,7 +157,8 @@ int run(char* script){
 	return errCode;
 }
 
-int echo(char* token){
+// rename to avoid warning
+int _echo(char* token){
 
 	if (token[0] == '$') {
 		token++;

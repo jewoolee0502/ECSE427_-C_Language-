@@ -21,7 +21,11 @@ int my_ls();
 int interpreter(char* command_args[], int args_size){
 	int i;
 
-	if ( args_size < 1 || args_size > MAX_ARGS_SIZE){
+	if( args_size > MAX_ARGS_SIZE) {
+		return badcommandTooManyTokens();
+	}
+
+	if ( args_size < 1){
 		return badcommand();
 	}
 
@@ -60,6 +64,10 @@ int interpreter(char* command_args[], int args_size){
 	} else if (strcmp(command_args[0], "run")==0) {
 		if (args_size != 2) return badcommand();
 		return run(command_args[1]);
+		
+	} else if (strcmp(command_args[0], "echo")==0) {
+		if (args_size != 2) return badcommand();
+		return echo(command_args[1]);
 	
 	} else if (strcmp(command_args[0], "my_ls")==0) {
 		if (args_size != 1) return badcommand();

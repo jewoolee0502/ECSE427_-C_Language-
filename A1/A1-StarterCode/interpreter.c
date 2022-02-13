@@ -15,14 +15,19 @@ int print(char* var);
 int run(char* script);
 int badcommandFileDoesNotExist();
 int badcommandTooManyTokens();
+int echo();
 int my_ls();
 
 // Interpret commands and their arguments
 int interpreter(char* command_args[], int args_size){
 	int i;
 
-	if ( args_size < 1 || args_size > MAX_ARGS_SIZE){
+	if ( args_size < 1){
 		return badcommand();
+	}
+
+	if (args_size > MAX_ARGS_SIZE) {
+		return badcommandTooManyTokens();
 	}
 
 
@@ -61,7 +66,11 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size != 2) return badcommand();
 		return run(command_args[1]);
 	
-	} else if (strcmp(command_args[0], "my_ls")==0) {
+	} else if (strcmp(command_args[0], "echo")==0) {
+		if (args_size != 2) return badcommand();
+		return echo(command_args[1]);
+
+	}else if (strcmp(command_args[0], "my_ls")==0) {
 		if (args_size != 1) return badcommand();
 		return my_ls();
 	}
@@ -112,7 +121,7 @@ int set(char* var, char* value){
 	strcat(buffer, value);
 	mem_set_value(var, value);
 	// remove contents of value
-	memset(value, 0, sizeof(value));
+	memset(value, 0, sizeof(500));
 
 	return 0;
 }
@@ -133,7 +142,7 @@ int run(char* script){
 
 	fgets(line,999,p);
 	while(1){
-		errCode = parseInput(line);	// which calls interpreter()
+		errCode = oneLiner(line);	// which calls interpreter()
 		memset(line, 0, sizeof(line));
 
 		if(feof(p)){

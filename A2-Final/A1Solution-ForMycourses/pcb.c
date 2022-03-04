@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pcb.h"
+#include "shellmemory.h"
 
 
 struct PCB* head = NULL;
@@ -32,7 +33,7 @@ struct PCB* findPCBHead() {
 }
 
 struct PCB* getHeadReadyQueue() {
-    struct PCB* output
+    struct PCB* output;
     
     if(head == NULL) {
         tail = NULL;

@@ -8,12 +8,12 @@ struct PCB* head = NULL;
 struct PCB* tail = NULL;
 struct PCB* currentPCB;
 
-struct PCB* PCBinitialize(int start, int end) {
+struct PCB* PCBinitialize(int start, int length) {
     struct PCB* p = (struct PCB*) malloc(sizeof(struct PCB));
     p->PC = start;
     p->PID = rand();
     p->start = start;
-    p->end = end;
+    p->length = length;
     p->instruction = 0;
     p->next = NULL;
 

@@ -4,6 +4,7 @@
 
 #include "shellmemory.h"
 #include "shell.h"
+#include "pcb.h"
 
 int MAX_ARGS_SIZE = 7;
 int line_number = 0;
@@ -159,6 +160,7 @@ int run(char* script){
 	}
 
 	fgets(line,999,p);
+	PCBinitialize(mem_set_value(), load());
 	while(1){
 		errCode = parseInput(line);	// which calls interpreter()
 		memset(line, 0, sizeof(line));
@@ -204,9 +206,9 @@ int checkSame3Files(FILE* file1, FILE* file2, FILE* file3) {
 }
 
 int exec(char* arg1, char* arg2, char* arg3, char* policy) {	//need to add FCFS at the end --> POLICY
-	FILE file1;
-	FILE file2;
-	FILE file3;
+	FILE* file1;
+	FILE* file2;
+	FILE* file3;
 
 	if(arg2 != NULL) {
 		if(checkSame2Files(arg1, arg2) == TRUE) {

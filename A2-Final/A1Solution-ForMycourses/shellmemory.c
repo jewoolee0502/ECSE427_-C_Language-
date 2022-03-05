@@ -22,14 +22,14 @@ void mem_init(){
 }
 
 // Set key value pair
-void mem_set_value(char *var_in, char *value_in) {
+int mem_set_value(char *var_in, char *value_in) {
 
 	int i;
 
 	for (i=0; i<1000; i++){
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);
-			return;
+			return i;
 		} 
 	}
 
@@ -38,11 +38,11 @@ void mem_set_value(char *var_in, char *value_in) {
 		if (strcmp(shellmemory[i].var, "none") == 0){
 			shellmemory[i].var = strdup(var_in);
 			shellmemory[i].value = strdup(value_in);
-			return;
+			return i;
 		} 
 	}
 
-	return;
+	return 0;
 
 }
 

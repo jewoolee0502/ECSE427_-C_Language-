@@ -160,7 +160,7 @@ int run(char* script){
 	}
 
 	fgets(line,999,p);
-	PCBinitialize(mem_set_value(), load());
+	PCBinitialize(mem_set_value(), load(script, 0));
 	while(1){
 		errCode = parseInput(line);	// which calls interpreter()
 		memset(line, 0, sizeof(line));

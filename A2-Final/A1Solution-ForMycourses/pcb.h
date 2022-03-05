@@ -6,7 +6,7 @@ struct PCB {
     int PC;
     int PID;
     int start;
-    int end;
+    int length;
     int instruction;
     struct PCB* next;
 };

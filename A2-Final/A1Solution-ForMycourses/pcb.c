@@ -17,6 +17,7 @@ struct PCB* PCBinitialize(int start, int length) {
     p->length = length;
     p->instruction = 0;
     p->next = NULL;
+    p->job_length_score = length;
 
     return p;
 }
@@ -33,6 +34,7 @@ struct PCB* findPCBHead() {
     return head;
 }
 
+// return the head, make new head = head->next
 struct PCB* getHeadReadyQueueFCFS() {
     struct PCB* output;
     
@@ -44,10 +46,6 @@ struct PCB* getHeadReadyQueueFCFS() {
     output = head;
     head = head->next;
     output->next = NULL;
-
-    // if(head == NULL) {   //just check if this needs to be here
-    //     tail = NULL;
-    // }
 
     return output;
 }
@@ -66,14 +64,16 @@ struct PCB* getHeadReadyQueueRR() {
 
     // to continue presence in the queue
     int end_of_file = head->start + head->length;
+    // TODO: not sure about <= operator
     if(head->instruction <= end_of_file) {
-        tail->next = head;
+        tail->next = output;
         tail = tail->next;
     }
     
     return output;
 }
 
+// in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue
 struct PCB* getHeadReadyQueueSJF() {
     struct PCB* output;
     
@@ -82,55 +82,77 @@ struct PCB* getHeadReadyQueueSJF() {
         return NULL;
     }
     
-    // get output
+    // get output (old head)
     output = head;
+    output->next = NULL;    //  deallocate pointers
 
-    // discard the head
+    // get new head
     head = head->next;
-    output->next = NULL;
 
+    if(head) {
+        struct PCB* temp = head;        // temp = new head (temporary)
+        struct PCB* node = head;        // node to be taken from the queue
+        int shortest_length = INT_MAX;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
 
-    /*  determine new head...
-        1/  go through list, find the smallest length process
-        2/  save that node as "node"
-        3/  remove "node" from the list
-        4/  append it to the head
-    */
-
-    struct PCB* temp = head;        // setting up params - temp will be used to iterate through linked list
-    struct PCB* node = NULL;        // node will be taken from the linked list and appended to the front of the linked list
-    int shortest_length = INT_MAX;  // this will be updated throughout the while loop to ensure shortest_length = shortest length
-
-
-    // 1/ and 2/    standard procedure for linked list iteration
-    while(temp) {
-        // do something (in this case, update node and shortest length)
-        if(temp->length < shortest_length) {
-            shortest_length = temp->length;
-            node = temp;
+        // find node
+        while(temp) {
+            if(temp->length < shortest_length) {
+                shortest_length = temp->length;
+                node = temp;
+            }
+            temp = temp->next;
         }
-        // end do something
-        temp = temp->next;
+
+        // remove node from queue
+        if(node->next) {
+            node = deletePCB(node);
+
+            // make node new head
+            node->next = head;
+            head = node;
+        } else {    // remove old tail (a clone of the new head)
+            node->next = head;  // make new head = node
+            head = node;
+            temp = head;
+            // now, remove the tail (which is now the new head) and reallocate it's pointer
+            while(temp->next && temp->next->next) {
+                temp = temp->next;
+            }
+            temp->next = NULL;
+            tail = temp;
+        }
+
     }
-
-
-    // 3/   remove "node" from the list
-
-    // node->val = node->next->val
-    node->PC = node->next->PC;
-    node->PID = node->next->PID;
-    node->start = node->next->start;
-    node->length = node->next->length;
-    node->instruction = node->next->instruction;
-
-    // node->next = node->next->next
-    node->next = node->next->next;
-
-    // 4/   append it to the head
-    node->next = head;
-    head = node;
     
+    // return output (old head)
     return output;
+}
+
+// creates a copy, deletes the node, returns the copy (head maintained)
+struct PCB* deletePCB(struct PCB* p) {
+    // clone node (TODO: Syntax)
+    struct PCB* deletedNode;
+    deletedNode->PC = p->PC;
+    deletedNode->PID = p->PID;
+    deletedNode->start = p->start;
+    deletedNode->length = p->length;
+    deletedNode->job_length_score = p->job_length_score;
+    deletedNode->instruction = p->instruction;
+
+    if(p->next == tail) {   // reallocate tail
+        tail = p;
+    }
+    // delete node (if head, p->next becomes head)
+    // node->val = node->next->val
+    p->PC = p->next->PC;
+    p->PID = p->next->PID;
+    p->start = p->next->start;
+    p->length = p->next->length;
+    p->job_length_score = p->next->job_length_score;
+    p->instruction = p->next->instruction;
+    p->next = p->next->next;
+
+    return deletedNode;
 }
 
 void addPCBToReadyQueue(struct PCB* p) {
@@ -154,10 +176,10 @@ void schedulerLogic(char *files[], char *policy) {
     int i = 0;
     while (*files != "") {  // iterate through all files
         int new_pos = load(*files++, i);
-        int length = new_pos-i;
+        int length = new_pos-i+1;
         struct PCB* p = PCBinitialize(i, length);
         addPCBToReadyQueue(p);
-        i = new_pos;
+        i = new_pos+1;
     }
 
     if (strcmp(policy, "SJF") == 0)
@@ -233,6 +255,40 @@ void rr() {
     }
 }
 
-void aging() {
+struct PCB* getHeadReadyQueueAging() {
+    struct PCB* output;
+    
+    if(!head == NULL) {
+        tail = NULL;
+        return NULL;
+    }
 
+    struct PCB* temp = head->next;
+    struct PCB* node = head;
+    int shortest_length = head->job_length_score-1;
+
+    while(temp) {
+        temp->job_length_score -= 1;
+        // if equal in length, take the first occurrence (a strict "<" accounts for this)
+        if(temp->job_length_score < shortest_length) {
+            shortest_length = temp->length;
+            node = temp;
+        }
+        // end do something
+        temp = temp->next;
+    }
+    node = deletePCB(node);
+
+    node->next = head;
+    head = node;
+    
+    return head;
+}
+
+void aging() {
+    // reassess for every time slice of 1 instruction
+    // get the head of the queue
+    // perform one instruction
+
+    // 
 }

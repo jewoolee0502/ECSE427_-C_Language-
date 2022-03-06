@@ -22,6 +22,19 @@ struct PCB* PCBinitialize(int start, int length) {
     return p;
 }
 
+// appends to front of list
+void addPCBToReadyQueue(struct PCB* p) {
+    if(head == NULL) {
+        head = p;
+        tail = p;
+    }
+    else {
+        tail->next = p;
+        tail = p;
+    }
+}
+
+// sets p->instruction
 void current_instruction(struct PCB* p, int line_number) {
     p->instruction = line_number;
 }
@@ -58,16 +71,16 @@ struct PCB* getHeadReadyQueueRR() {
         return NULL;
     }
     
+    // extract output
     output = head;
-    head = head->next;
     output->next = NULL;
 
-    // to continue presence in the queue
-    int end_of_file = head->start + head->length;
-    // TODO: not sure about <= operator
-    if(head->instruction <= end_of_file) {
-        tail->next = output;
-        tail = tail->next;
+    // new list
+    head = head->next;
+
+    int end_of_file = output->start + output->length;
+    if(output->instruction < end_of_file) {
+        addPCBToReadyQueue(output);
     }
     
     return output;
@@ -155,17 +168,6 @@ struct PCB* deletePCB(struct PCB* p) {
     return deletedNode;
 }
 
-void addPCBToReadyQueue(struct PCB* p) {
-    if(head == NULL) {
-        head = p;
-        tail = p;
-    }
-    else {
-        tail->next = p;
-        tail = p;
-    }
-}
-
 void cleanUp() {
     mem_init();
 }
@@ -204,8 +206,11 @@ void fcfs() {
     // for string parsing
     char instr = NULL;
     // while there is a head
-    while(getHeadReadyQueueFCFS()) {
+    while(1) {
         struct PCB* p = getHeadReadyQueueFCFS();    // extract the head
+        if(!p) {
+            break;
+        }
         // set current instruction to start instruction
         current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
@@ -221,8 +226,11 @@ void sjf() {
     // for string parsing
     char instr = NULL;
     // while there is a head
-    while(getHeadReadyQueueSJF()) {
+    while(1) {
         struct PCB* p = getHeadReadyQueueSJF();    // extract the head
+        if(!p) {
+            break;
+        }
         // set current instruction to start instruction
         current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
@@ -239,8 +247,11 @@ void rr() {
     // for string parsing
     char instr = NULL;
     // while there is a head
-    while(getHeadReadyQueueRR()) {
+    while(1) {
         struct PCB* p = getHeadReadyQueueRR();    // extract the head
+        if(!p) {
+            break;
+        }
         // set current instruction to start instruction
         current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
@@ -283,6 +294,61 @@ struct PCB* getHeadReadyQueueAging() {
     head = node;
     
     return head;
+}
+
+// in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue
+struct PCB* getHeadReadyQueueAging() {
+    struct PCB* output;
+    
+    if(head == NULL) {
+        tail = NULL;
+        return NULL;
+    }
+    
+    // get output (old head)
+    output = head;
+    output->next = NULL;    //  deallocate pointers
+
+    // get new head
+    head = head->next;
+
+    if(head) {
+        struct PCB* temp = head;        // temp = new head (temporary)
+        struct PCB* node = head;        // node to be taken from the queue
+        int shortest_length = INT_MAX;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
+
+        // find node
+        while(temp) {
+            if(temp->length < shortest_length) {
+                shortest_length = temp->length;
+                node = temp;
+            }
+            temp = temp->next;
+        }
+
+        // remove node from queue
+        if(node->next) {
+            node = deletePCB(node);
+
+            // make node new head
+            node->next = head;
+            head = node;
+        } else {    // remove old tail (a clone of the new head)
+            node->next = head;  // make new head = node
+            head = node;
+            temp = head;
+            // now, remove the tail (which is now the new head) and reallocate it's pointer
+            while(temp->next && temp->next->next) {
+                temp = temp->next;
+            }
+            temp->next = NULL;
+            tail = temp;
+        }
+
+    }
+    
+    // return output (old head)
+    return output;
 }
 
 void aging() {

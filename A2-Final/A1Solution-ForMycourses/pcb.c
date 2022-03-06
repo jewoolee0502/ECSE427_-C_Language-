@@ -18,7 +18,7 @@ struct PCB* PCBinitialize(int start, int length) {
     p->PID = rand();
     p->start = start;
     p->length = length;
-    p->instruction = 0;
+    p->instruction = start;
     p->next = NULL;
     p->job_length_score = length;
 
@@ -35,7 +35,7 @@ void iterateThroughQueue() {
     }
 }
 
-// appends to front of list
+// appends to end of list
 void addPCBToReadyQueue(struct PCB* p) {
     if(head == NULL) {
         head = p;
@@ -100,18 +100,27 @@ struct PCB* deletePCB(struct PCB* p) {
     // clone node (TODO: Syntax)
     struct PCB* deletedNode = clonePCB(p);
 
-    if(p->next == tail) {   // reallocate tail
+    if(p->next && p->next == tail) {   // reallocate tail
         tail = p;
     }
     // delete node (if head, p->next becomes head)
     // node->val = node->next->val
-    p->PC = p->next->PC;
-    p->PID = p->next->PID;
-    p->start = p->next->start;
-    p->length = p->next->length;
-    p->job_length_score = p->next->job_length_score;
-    p->instruction = p->next->instruction;
-    p->next = p->next->next;
+    if(p->next) {
+        p->PC = p->next->PC;
+        p->PID = p->next->PID;
+        p->start = p->next->start;
+        p->length = p->next->length;
+        p->job_length_score = p->next->job_length_score;
+        p->instruction = p->next->instruction;
+        p->next = p->next->next;
+    } else {    // reassign the tail, make node null
+        struct PCB* temp = head;
+        while(temp->next && temp->next->next) {
+            temp = temp->next;
+        }
+        tail = temp;
+        p = NULL;
+    }
 
     return deletedNode;
 }
@@ -149,16 +158,17 @@ struct PCB* getHeadReadyQueueRR() {
     
     // extract output
     output = head;
+    head = head->next;    // new list
     output->next = NULL;
 
-    // new list
-    head = head->next;
+    // iterateThroughQueue();
 
     int end_of_file = output->start + output->length;
-    if(output->instruction < end_of_file) {
+    // printf("cur: %d, length: %d \n", output->instruction, end_of_file);
+    if(output->instruction+2 < end_of_file) {
         addPCBToReadyQueue(output);
     }
-    
+    // return output;
     return output;
 }
 
@@ -373,7 +383,7 @@ void sjf() {
 
 void rr() {
     // for string parsing
-    char* instr = NULL;
+    char instr[1000];
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueRR();    // extract the head
@@ -381,11 +391,11 @@ void rr() {
             break;
         }
         // set current instruction to start instruction
-        current_instruction(p, p->start);
+        // current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
         int rr_counter = 0;
 
-        while(p->instruction < end_of_file && rr_counter < 2) {   // rr: iterate twice
+        while(rr_counter < 2 && p->instruction < end_of_file) {   // rr: iterate twice
             sprintf(instr, "%d", p->instruction);
             parseInput(mem_get_value(instr));
             p->instruction++;

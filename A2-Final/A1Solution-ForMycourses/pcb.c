@@ -25,6 +25,16 @@ struct PCB* PCBinitialize(int start, int length) {
     return p;
 }
 
+void iterateThroughQueue() {
+    struct PCB* current = head;
+    int i = 0;
+    while(current) {
+        printf("Node %d: start value of %d, length of %d\n", i, current->start, current->length);
+        current = current->next;
+        i++;
+    }
+}
+
 // appends to front of list
 void addPCBToReadyQueue(struct PCB* p) {
     if(head == NULL) {
@@ -86,12 +96,9 @@ struct PCB* findPCBHead() {
 
 // creates a copy, deletes the node, returns the copy (head maintained)
 struct PCB* deletePCB(struct PCB* p) {
+
     // clone node (TODO: Syntax)
-    struct PCB* deletedNode = PCBinitialize(p->start, p->length);
-    deletedNode->PC = p->PC;
-    deletedNode->PID = p->PID;
-    deletedNode->job_length_score = p->job_length_score;
-    deletedNode->instruction = p->instruction;
+    struct PCB* deletedNode = clonePCB(p);
 
     if(p->next == tail) {   // reallocate tail
         tail = p;
@@ -166,10 +173,8 @@ struct PCB* getHeadReadyQueueSJF() {
     
     // get output (old head)
     output = head;
+    head = head->next;      // get new head
     output->next = NULL;    //  deallocate pointers
-
-    // get new head
-    head = head->next;
 
     if(head) {
         struct PCB* temp = head;        // temp = new head (temporary)
@@ -193,11 +198,13 @@ struct PCB* getHeadReadyQueueSJF() {
             node->next = head;
             head = node;
         } else {    // remove old tail (a clone of the new head)
-            node->next = head;  // make new head = node
-            head = node;
+            struct PCB* newNode = clonePCB(node);
+            newNode->next = head;
+            head = newNode;
             temp = head;
+
             // now, remove the tail (which is now the new head) and reallocate it's pointer
-            while(temp->next && temp->next->next) {
+            while(temp->next != NULL && temp->next->next != NULL) {
                 temp = temp->next;
             }
             temp->next = NULL;
@@ -208,6 +215,20 @@ struct PCB* getHeadReadyQueueSJF() {
     
     // return output (old head)
     return output;
+}
+
+// void rearrangeSJF() {
+    
+
+// }
+
+struct PCB* clonePCB(struct PCB* p) {
+    struct PCB* newNode = PCBinitialize(p->start, p->length);
+    newNode->PC = p->PC;
+    newNode->PID = p->PID;
+    newNode->job_length_score = p->job_length_score;
+    newNode->instruction = p->instruction;
+    return newNode;
 }
 
 // in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue
@@ -270,16 +291,19 @@ struct PCB* getHeadReadyQueueAging() {
 }
 
 void schedulerLogic(char *files[], int files_size) {
-    
     // step 1 : for all files, create a PCB and add to ready queue (linked list)
-    int i = 1;
-    while (*files != NULL) {  // iterate through all files
-        int new_pos = load(*files++, i);
+    int i = 0;
+
+    for(int j = 1; j < files_size-1; j++) {
+
+        int new_pos = load(files[j], i);
         int length = new_pos-i+1;
         struct PCB* p = PCBinitialize(i, length);
         addPCBToReadyQueue(p);
         i = new_pos+1;
     }
+
+    // works up to here
 
     if (strcmp(files[files_size-1], "SJF") == 0)
     {
@@ -327,8 +351,9 @@ void fcfs() {
 
 void sjf() {
     // for string parsing
-    char* instr = NULL;
+    char instr[1000];
     // while there is a head
+
     while(1) {
         struct PCB* p = getHeadReadyQueueSJF();    // extract the head
         if(!p) {

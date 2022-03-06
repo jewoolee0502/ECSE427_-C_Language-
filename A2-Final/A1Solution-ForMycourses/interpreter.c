@@ -23,7 +23,6 @@ int exec(char* arg[], int args_size);
 
 int interpreter(char* command_args[], int args_size){
 	int i;
-
 	if ( args_size < 1 || args_size > MAX_ARGS_SIZE){
 		if (strcmp(command_args[0], "set")==0 && args_size > MAX_ARGS_SIZE) {
 			return badcommandTooManyTokens();
@@ -76,7 +75,7 @@ int interpreter(char* command_args[], int args_size){
 		return echo(command_args[1]);
 	
 	} else if (strcmp(command_args[0], "exec")==0) {
-		if (args_size > 3) return badcommand(); //changed this command from >2 to >4
+		if (args_size > 5) return badcommand(); //changed this command from >2 to >4
 		return exec(command_args, args_size);
 	
 	} else return badcommand();
@@ -130,8 +129,8 @@ int set(char* var, char* value){
 
 //my code for code loading
 int load(char* script, int line_number) {
-	char* value = NULL;
-	char* var = NULL;
+	char value[1000];
+	char var[1000];
 	FILE *p = fopen(script, "rt");
 
 	while(!feof(p)) {

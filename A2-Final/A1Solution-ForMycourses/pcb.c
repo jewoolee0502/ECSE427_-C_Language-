@@ -199,6 +199,9 @@ struct PCB* getHeadReadyQueueAging() {
         // find node
         while(temp) {
             temp->job_length_score -= 1;
+            if(temp->job_length_score < 0) {
+                badcommand();
+            }
             if(temp->job_length_score < shortest_length) {
                 shortest_length = temp->job_length_score;
                 node = temp;

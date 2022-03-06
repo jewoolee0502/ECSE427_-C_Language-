@@ -14,15 +14,28 @@ struct PCB {
 
 struct PCB* PCBinitialize(int start, int end);
 
-void link_instructions(struct PCB* p, int line_number);
-void link_PCB(struct PCB* p, struct PCB *next_PCB);
+void addPCBToReadyQueue(struct PCB* p);
+// int removePCBFromReadyQueue();
+// int executeQueue();
 
+void current_instruction(struct PCB* p, int line_number);
+void link_PCB(struct PCB* p, struct PCB* next_PCB);
 struct PCB* findPCBHead();
-struct PCB* getHeadReadyQueue();
-void addReadyQueuetoPCB(struct PCB* p);
+struct PCB* deletePCB(struct PCB* p);
 
 void cleanUp();
 
-void schedulerLogic();
+struct PCB* getHeadReadyQueueFCFS();
+struct PCB* getHeadReadyQueueRR();
+struct PCB* getHeadReadyQueueSJF();
+struct PCB* getHeadReadyQueueAging();
+
+void schedulerLogic(char *files[], int files_size);
+
+void fcfs();
+void sjf();
+void rr();
+void aging();
+
 
 #endif

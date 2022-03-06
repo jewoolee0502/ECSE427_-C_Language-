@@ -19,6 +19,7 @@ int print(char* var);
 int run(char* script);
 int my_ls();
 int echo();
+int exec(char* arg[], int args_size);
 
 int interpreter(char* command_args[], int args_size){
 	int i;
@@ -70,9 +71,13 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 2) return badcommand();
 		return my_ls();
 	
-	}else if (strcmp(command_args[0], "echo")==0) {
+	} else if (strcmp(command_args[0], "echo")==0) {
 		if (args_size > 3) return badcommand(); //changed this command from >2 to >4
 		return echo(command_args[1]);
+	
+	} else if (strcmp(command_args[0], "exec")==0) {
+		if (args_size > 3) return badcommand(); //changed this command from >2 to >4
+		return exec(command_args, args_size);
 	
 	} else return badcommand();
 }
@@ -160,7 +165,6 @@ int run(char* script){
 	}
 
 	fgets(line,999,p);
-	PCBinitialize(mem_set_value(), load(script, 0));
 	while(1){
 		errCode = parseInput(line);	// which calls interpreter()
 		memset(line, 0, sizeof(line));
@@ -191,89 +195,8 @@ int echo(char* var){
 	return 0; 
 }
 
-int checkSame2Files(FILE* file1, FILE* file2) {
-	if(strcmp(file1, file2) == 0) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-int checkSame3Files(FILE* file1, FILE* file2, FILE* file3) {
-	if((strcmp(file1, file2) == 0) || (strcmp(file1, file3) == 0) || (strcmp(file2, file3) == 0)) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-int exec(char* arg1, char* arg2, char* arg3, char* policy) {	//need to add FCFS at the end --> POLICY
-	FILE* file1;
-	FILE* file2;
-	FILE* file3;
-
-	if(arg2 != NULL) {
-		if(checkSame2Files(arg1, arg2) == TRUE) {
-			printf("error: The argument %s is already used! \n", arg1);
-			return -1;
-		}
-		else {
-			if(arg3 != NULL) {
-				if(checkSame3Files(arg1, arg2, arg3) == TRUE) {
-					printf("error: The argument %s is already used! \n", arg1);
-					return -1;
-				}
-				else {
-					file1 = fopen(arg1, "rt");
-					file2 = fopen(arg2, "rt");
-					file3 = fopen(arg3, "rt");
-
-					if((file1 == NULL) || (file2 == NULL) || (file3 == NULL)) {
-						printf("error: one of the written files could not be found! \n");
-						return -1;
-					}
-
-					if() {	//need to implement this
-						printf("Successfully loaded all the files! \n");
-						return 0;
-					}
-					else {
-						return -1;
-					}
-				}
-			}
-			else {
-				file1 = fopen(arg1, "rt");
-				file2 = fopen(arg2, "rt");
-				
-				if((file1 == NULL) || (file2 == NULL)) {
-					printf("error: one of the written files could not be found! \n");
-					return -1;
-				}
-
-				if() {	//need to implement this
-					printf("Successfully loaded all the files! \n");
-					return 0;
-				}
-				else {
-					return -1;
-				}
-			}
-		}
-	}
-	else {
-		file1 = fopen(arg1, "rt");
-
-		if(file1 == NULL) {
-			printf("error: The file %s could not be found! \n", arg1);
-			return -1;
-		}
-
-		if() {	//need to implement this
-			printf("The file is successfully loaded! \n");
-			return 0;
-		}
-		else {
-			return -1
-		}
-	}
+int exec(char* arg[], int args_size) {
+	schedulerLogic(arg, args_size);
+	return 0;
 }
 

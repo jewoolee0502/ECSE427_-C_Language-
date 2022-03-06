@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include "pcb.h"
 #include "shellmemory.h"
+#include "interpreter.h"
+#include "shell.h"
 
 
 struct PCB* head = NULL;
@@ -33,6 +36,40 @@ void addPCBToReadyQueue(struct PCB* p) {
         tail = p;
     }
 }
+
+// int removePCBFromReadyQueue() {
+//     if(head != NULL) {
+//         struct PCB* temp = head;    //temp to store the value of head
+//         head = head->next;
+//         free head;
+
+//         return 0;
+//     }
+
+//     return 1;
+// }
+
+// int executeQueue() {
+//     if(head NULL) {
+//         return 1;
+//     }
+//     else {
+//         struct PCB* temp = head;
+//         while(temp != NULL) {
+//             for(int i = 1; i < temp->length; i++) {
+//                 errCode = parseInput(mem_get_value(temp));
+
+//                 if(errcode == 1) {
+//                     return 1;
+//                 }
+//             }
+//             temp = temp->next;
+//                 removePCBFromReadyQueue();
+//         }
+//     }
+
+//     return 0;
+// }
 
 // sets p->instruction
 void current_instruction(struct PCB* p, int line_number) {
@@ -234,11 +271,11 @@ struct PCB* getHeadReadyQueueAging() {
     return output;
 }
 
-void schedulerLogic(char *files[], char *policy) {
+void schedulerLogic(char *files[], int files_size) {
     
     // step 1 : for all files, create a PCB and add to ready queue (linked list)
-    int i = 0;
-    while (*files != "") {  // iterate through all files
+    int i = 1;
+    while (*files != NULL) {  // iterate through all files
         int new_pos = load(*files++, i);
         int length = new_pos-i+1;
         struct PCB* p = PCBinitialize(i, length);
@@ -246,15 +283,15 @@ void schedulerLogic(char *files[], char *policy) {
         i = new_pos+1;
     }
 
-    if (strcmp(policy, "SJF") == 0)
+    if (strcmp(files[files_size-1], "SJF") == 0)
     {
         sjf();
     }
-    else if (strcmp(policy, "RR") == 0)
+    else if (strcmp(files[files_size-1], "RR") == 0)
     {
         rr();
     }
-    else if (strcmp(policy, "AGING") == 0)
+    else if (strcmp(files[files_size-1], "AGING") == 0)
     {
         aging();
     }
@@ -266,7 +303,7 @@ void schedulerLogic(char *files[], char *policy) {
 
 void fcfs() {
     // for string parsing
-    char instr = NULL;
+    char* instr = NULL;
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueFCFS();    // extract the head
@@ -282,11 +319,17 @@ void fcfs() {
             p->instruction++;
         }
     }
+
+
+    // addPCBToReadyQueue();
+    // for(int i = 0; i < length; i++) {
+    //     executeQueue();
+    // }
 }
 
 void sjf() {
     // for string parsing
-    char instr = NULL;
+    char* instr = NULL;
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueSJF();    // extract the head
@@ -307,7 +350,7 @@ void sjf() {
 
 void rr() {
     // for string parsing
-    char instr = NULL;
+    char* instr = NULL;
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueRR();    // extract the head
@@ -330,7 +373,7 @@ void rr() {
 
 void aging() {
     // for string parsing
-    char instr = NULL;
+    char* instr = NULL;
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueAging();    // extract the head

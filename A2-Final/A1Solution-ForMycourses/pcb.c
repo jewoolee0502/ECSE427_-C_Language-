@@ -258,7 +258,7 @@ void schedulerLogic(char *files[], char *policy) {
     {
         aging();
     }
-    else /* default: FCFS */
+    else
     {
         fcfs();
     }
@@ -342,7 +342,7 @@ void aging() {
         int end_of_file = p->start + p->length;
         int count = 0;
 
-        while(p->instruction < end_of_file && count < 1) {   // sjf: performs just like fcfs from here on
+        while(p->instruction < end_of_file && count < 1) {   // aging: performs just like fcfs from here on with count
             sprintf(instr, "%d", p->instruction);
             parseInput(mem_get_value(instr));
             p->instruction++;

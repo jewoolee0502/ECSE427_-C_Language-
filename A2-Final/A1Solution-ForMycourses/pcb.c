@@ -87,11 +87,9 @@ struct PCB* findPCBHead() {
 // creates a copy, deletes the node, returns the copy (head maintained)
 struct PCB* deletePCB(struct PCB* p) {
     // clone node (TODO: Syntax)
-    struct PCB* deletedNode;
+    struct PCB* deletedNode = PCBinitialize(p->start, p->length);
     deletedNode->PC = p->PC;
     deletedNode->PID = p->PID;
-    deletedNode->start = p->start;
-    deletedNode->length = p->length;
     deletedNode->job_length_score = p->job_length_score;
     deletedNode->instruction = p->instruction;
 

@@ -176,6 +176,13 @@ struct PCB* getHeadReadyQueueSJF() {
     head = head->next;      // get new head
     output->next = NULL;    //  deallocate pointers
 
+    rearrangeSJF();
+    
+    // return output (old head)
+    return output;
+}
+
+void rearrangeSJF() {
     if(head) {
         struct PCB* temp = head;        // temp = new head (temporary)
         struct PCB* node = head;        // node to be taken from the queue
@@ -212,15 +219,7 @@ struct PCB* getHeadReadyQueueSJF() {
         }
 
     }
-    
-    // return output (old head)
-    return output;
 }
-
-// void rearrangeSJF() {
-    
-
-// }
 
 struct PCB* clonePCB(struct PCB* p) {
     struct PCB* newNode = PCBinitialize(p->start, p->length);
@@ -350,6 +349,7 @@ void fcfs() {
 }
 
 void sjf() {
+    rearrangeSJF();
     // for string parsing
     char instr[1000];
     // while there is a head

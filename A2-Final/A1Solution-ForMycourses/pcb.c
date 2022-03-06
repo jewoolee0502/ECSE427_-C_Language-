@@ -125,10 +125,7 @@ struct PCB* getHeadReadyQueueRR() {
     head = head->next;    // new list
     output->next = NULL;
 
-    // iterateThroughQueue();
-
     int end_of_file = output->start + output->length;
-    // printf("cur: %d, length: %d \n", output->instruction, end_of_file);
     if(output->instruction+2 < end_of_file) {
         addPCBToReadyQueue(output);
     }
@@ -204,62 +201,66 @@ struct PCB* clonePCB(struct PCB* p) {
     return newNode;
 }
 
-// in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue
+// in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue. This is not the case with Aging.
 struct PCB* getHeadReadyQueueAging() {
     struct PCB* output;
-    
+
     if(head == NULL) {
         tail = NULL;
         return NULL;
     }
-    
+
     // get output (old head)
     output = head;
+    head = head->next;      // get new head
     output->next = NULL;    //  deallocate pointers
 
-    // get new head
-    head = head->next;
+    struct PCB* temp = head;        // temp = new head (temporary)
+    struct PCB* node = output;        // node to be taken from the queue
+    int shortest_length = output->job_length_score-1;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
 
-    if(head) {
-        struct PCB* temp = head;        // temp = new head (temporary)
-        struct PCB* node = head;        // node to be taken from the queue
-        int shortest_length = head->job_length_score-1;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
-
-        // find node
-        while(temp) {
+    // find node
+    while(temp) {
+        if(temp->job_length_score > 0) {
             temp->job_length_score -= 1;
-            if(temp->job_length_score < 0) {
-                badcommand();
-            }
-            if(temp->job_length_score < shortest_length) {
-                shortest_length = temp->job_length_score;
-                node = temp;
-            }
-            temp = temp->next;
         }
+        if(temp->job_length_score < shortest_length) {
+            shortest_length = temp->job_length_score;
+            node = temp;
+        }
+        temp = temp->next;
+    }
 
-        // remove node from queue
+    // remove node from queue
+    if(node != output) {
+
         if(node->next) {
-            node = deletePCB(node);
+            struct PCB* newNode = deletePCB(node);
 
             // make node new head
-            node->next = head;
-            head = node;
+            newNode->next = head;
+            head = newNode;
         } else {    // remove old tail (a clone of the new head)
-            node->next = head;  // make new head = node
-            head = node;
+            struct PCB* newNode = clonePCB(node);
+            newNode->next = head;
+            head = newNode;
             temp = head;
+
             // now, remove the tail (which is now the new head) and reallocate it's pointer
-            while(temp->next && temp->next->next) {
+            while(temp->next != NULL && temp->next->next != NULL) {
                 temp = temp->next;
             }
             temp->next = NULL;
             tail = temp;
         }
-
     }
-    
-    // return output (old head)
+
+    // now, deal with the output
+    int end_of_file = output->start + output->length;
+    if(output->instruction+1 <= end_of_file) {
+        addPCBToReadyQueue(output);
+    }
+
     return output;
 }
 
@@ -275,9 +276,6 @@ void schedulerLogic(char *files[], int files_size) {
         addPCBToReadyQueue(p);
         i = new_pos+1;
     }
-
-    // works up to here
-
     if (strcmp(files[files_size-1], "SJF") == 0)
     {
         sjf();
@@ -294,6 +292,8 @@ void schedulerLogic(char *files[], int files_size) {
     {
         fcfs();
     }
+    cleanUp();
+
 }
 
 void fcfs() {
@@ -314,12 +314,6 @@ void fcfs() {
             p->instruction++;
         }
     }
-
-
-    // addPCBToReadyQueue();
-    // for(int i = 0; i < length; i++) {
-    //     executeQueue();
-    // }
 }
 
 void sjf() {
@@ -369,8 +363,9 @@ void rr() {
 }
 
 void aging() {
+    rearrangeSJF();
     // for string parsing
-    char* instr = NULL;
+    char instr[1000];
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueAging();    // extract the head
@@ -378,11 +373,10 @@ void aging() {
             break;
         }
         // set current instruction to start instruction
-        current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
         int count = 0;
 
-        while(p->instruction < end_of_file && count < 1) {   // aging: performs just like fcfs from here on with count
+        while(count < 1 && p->instruction < end_of_file) {   // aging: performs just like fcfs from here on with count
             sprintf(instr, "%d", p->instruction);
             parseInput(mem_get_value(instr));
             p->instruction++;

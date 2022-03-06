@@ -315,11 +315,6 @@ void fcfs() {
         }
     }
 
-
-    // addPCBToReadyQueue();
-    // for(int i = 0; i < length; i++) {
-    //     executeQueue();
-    // }
 }
 
 void sjf() {

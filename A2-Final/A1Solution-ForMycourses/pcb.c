@@ -47,40 +47,6 @@ void addPCBToReadyQueue(struct PCB* p) {
     }
 }
 
-// int removePCBFromReadyQueue() {
-//     if(head != NULL) {
-//         struct PCB* temp = head;    //temp to store the value of head
-//         head = head->next;
-//         free head;
-
-//         return 0;
-//     }
-
-//     return 1;
-// }
-
-// int executeQueue() {
-//     if(head NULL) {
-//         return 1;
-//     }
-//     else {
-//         struct PCB* temp = head;
-//         while(temp != NULL) {
-//             for(int i = 1; i < temp->length; i++) {
-//                 errCode = parseInput(mem_get_value(temp));
-
-//                 if(errcode == 1) {
-//                     return 1;
-//                 }
-//             }
-//             temp = temp->next;
-//                 removePCBFromReadyQueue();
-//         }
-//     }
-
-//     return 0;
-// }
-
 // sets p->instruction
 void current_instruction(struct PCB* p, int line_number) {
     p->instruction = line_number;
@@ -140,10 +106,8 @@ struct PCB* getHeadReadyQueueFCFS() {
     
     // extract output
     output = head;
+    head = head->next;    // new list
     output->next = NULL;
-
-    // new list
-    head = head->next;
 
     return output;
 }
@@ -334,7 +298,7 @@ void schedulerLogic(char *files[], int files_size) {
 
 void fcfs() {
     // for string parsing
-    char* instr = NULL;
+    char instr[1000];
     // while there is a head
     while(1) {
         struct PCB* p = getHeadReadyQueueFCFS();    // extract the head

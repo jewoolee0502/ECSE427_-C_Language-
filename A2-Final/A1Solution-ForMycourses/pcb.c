@@ -47,6 +47,37 @@ struct PCB* findPCBHead() {
     return head;
 }
 
+// creates a copy, deletes the node, returns the copy (head maintained)
+struct PCB* deletePCB(struct PCB* p) {
+    // clone node (TODO: Syntax)
+    struct PCB* deletedNode;
+    deletedNode->PC = p->PC;
+    deletedNode->PID = p->PID;
+    deletedNode->start = p->start;
+    deletedNode->length = p->length;
+    deletedNode->job_length_score = p->job_length_score;
+    deletedNode->instruction = p->instruction;
+
+    if(p->next == tail) {   // reallocate tail
+        tail = p;
+    }
+    // delete node (if head, p->next becomes head)
+    // node->val = node->next->val
+    p->PC = p->next->PC;
+    p->PID = p->next->PID;
+    p->start = p->next->start;
+    p->length = p->next->length;
+    p->job_length_score = p->next->job_length_score;
+    p->instruction = p->next->instruction;
+    p->next = p->next->next;
+
+    return deletedNode;
+}
+
+void cleanUp() {
+    mem_init();
+}
+
 // return the head, make new head = head->next
 struct PCB* getHeadReadyQueueFCFS() {
     struct PCB* output;
@@ -56,9 +87,12 @@ struct PCB* getHeadReadyQueueFCFS() {
         return NULL;
     }
     
+    // extract output
     output = head;
-    head = head->next;
     output->next = NULL;
+
+    // new list
+    head = head->next;
 
     return output;
 }
@@ -141,35 +175,60 @@ struct PCB* getHeadReadyQueueSJF() {
     return output;
 }
 
-// creates a copy, deletes the node, returns the copy (head maintained)
-struct PCB* deletePCB(struct PCB* p) {
-    // clone node (TODO: Syntax)
-    struct PCB* deletedNode;
-    deletedNode->PC = p->PC;
-    deletedNode->PID = p->PID;
-    deletedNode->start = p->start;
-    deletedNode->length = p->length;
-    deletedNode->job_length_score = p->job_length_score;
-    deletedNode->instruction = p->instruction;
-
-    if(p->next == tail) {   // reallocate tail
-        tail = p;
+// in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue
+struct PCB* getHeadReadyQueueAging() {
+    struct PCB* output;
+    
+    if(head == NULL) {
+        tail = NULL;
+        return NULL;
     }
-    // delete node (if head, p->next becomes head)
-    // node->val = node->next->val
-    p->PC = p->next->PC;
-    p->PID = p->next->PID;
-    p->start = p->next->start;
-    p->length = p->next->length;
-    p->job_length_score = p->next->job_length_score;
-    p->instruction = p->next->instruction;
-    p->next = p->next->next;
+    
+    // get output (old head)
+    output = head;
+    output->next = NULL;    //  deallocate pointers
 
-    return deletedNode;
-}
+    // get new head
+    head = head->next;
 
-void cleanUp() {
-    mem_init();
+    if(head) {
+        struct PCB* temp = head;        // temp = new head (temporary)
+        struct PCB* node = head;        // node to be taken from the queue
+        int shortest_length = head->job_length_score-1;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
+
+        // find node
+        while(temp) {
+            temp->job_length_score -= 1;
+            if(temp->job_length_score < shortest_length) {
+                shortest_length = temp->job_length_score;
+                node = temp;
+            }
+            temp = temp->next;
+        }
+
+        // remove node from queue
+        if(node->next) {
+            node = deletePCB(node);
+
+            // make node new head
+            node->next = head;
+            head = node;
+        } else {    // remove old tail (a clone of the new head)
+            node->next = head;  // make new head = node
+            head = node;
+            temp = head;
+            // now, remove the tail (which is now the new head) and reallocate it's pointer
+            while(temp->next && temp->next->next) {
+                temp = temp->next;
+            }
+            temp->next = NULL;
+            tail = temp;
+        }
+
+    }
+    
+    // return output (old head)
+    return output;
 }
 
 void schedulerLogic(char *files[], char *policy) {
@@ -266,95 +325,25 @@ void rr() {
     }
 }
 
-struct PCB* getHeadReadyQueueAging() {
-    struct PCB* output;
-    
-    if(!head == NULL) {
-        tail = NULL;
-        return NULL;
-    }
-
-    struct PCB* temp = head->next;
-    struct PCB* node = head;
-    int shortest_length = head->job_length_score-1;
-
-    while(temp) {
-        temp->job_length_score -= 1;
-        // if equal in length, take the first occurrence (a strict "<" accounts for this)
-        if(temp->job_length_score < shortest_length) {
-            shortest_length = temp->length;
-            node = temp;
-        }
-        // end do something
-        temp = temp->next;
-    }
-    node = deletePCB(node);
-
-    node->next = head;
-    head = node;
-    
-    return head;
-}
-
-// in SJF, a process will have completed 100% and thus we can remove the PCB from the ready queue
-struct PCB* getHeadReadyQueueAging() {
-    struct PCB* output;
-    
-    if(head == NULL) {
-        tail = NULL;
-        return NULL;
-    }
-    
-    // get output (old head)
-    output = head;
-    output->next = NULL;    //  deallocate pointers
-
-    // get new head
-    head = head->next;
-
-    if(head) {
-        struct PCB* temp = head;        // temp = new head (temporary)
-        struct PCB* node = head;        // node to be taken from the queue
-        int shortest_length = INT_MAX;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
-
-        // find node
-        while(temp) {
-            if(temp->length < shortest_length) {
-                shortest_length = temp->length;
-                node = temp;
-            }
-            temp = temp->next;
-        }
-
-        // remove node from queue
-        if(node->next) {
-            node = deletePCB(node);
-
-            // make node new head
-            node->next = head;
-            head = node;
-        } else {    // remove old tail (a clone of the new head)
-            node->next = head;  // make new head = node
-            head = node;
-            temp = head;
-            // now, remove the tail (which is now the new head) and reallocate it's pointer
-            while(temp->next && temp->next->next) {
-                temp = temp->next;
-            }
-            temp->next = NULL;
-            tail = temp;
-        }
-
-    }
-    
-    // return output (old head)
-    return output;
-}
-
 void aging() {
-    // reassess for every time slice of 1 instruction
-    // get the head of the queue
-    // perform one instruction
+    // for string parsing
+    char instr = NULL;
+    // while there is a head
+    while(1) {
+        struct PCB* p = getHeadReadyQueueAging();    // extract the head
+        if(!p) {
+            break;
+        }
+        // set current instruction to start instruction
+        current_instruction(p, p->start);
+        int end_of_file = p->start + p->length;
+        int count = 0;
 
-    // 
+        while(p->instruction < end_of_file && count < 1) {   // sjf: performs just like fcfs from here on
+            sprintf(instr, "%d", p->instruction);
+            parseInput(mem_get_value(instr));
+            p->instruction++;
+            count++;
+        }
+    }
 }

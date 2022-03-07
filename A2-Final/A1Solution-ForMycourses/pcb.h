@@ -14,6 +14,7 @@ struct PCB {
 
 struct PCB* PCBinitialize(int start, int end);
 
+int getPCBsize();
 void addPCBToReadyQueue(struct PCB* p);
 // int removePCBFromReadyQueue();
 // int executeQueue();

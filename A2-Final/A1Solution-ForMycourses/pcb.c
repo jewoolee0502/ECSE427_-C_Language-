@@ -11,6 +11,7 @@
 struct PCB* head = NULL;
 struct PCB* tail = NULL;
 struct PCB* currentPCB;
+int pcb_size = 0;
 
 struct PCB* PCBinitialize(int start, int length) {
     struct PCB* p = (struct PCB*) malloc(sizeof(struct PCB));
@@ -35,6 +36,10 @@ void iterateThroughQueue() {
     }
 }
 
+int getPCBSize() {
+    return pcb_size;
+}
+
 // appends to end of list
 void addPCBToReadyQueue(struct PCB* p) {
     if(head == NULL) {
@@ -45,6 +50,7 @@ void addPCBToReadyQueue(struct PCB* p) {
         tail->next = p;
         tail = p;
     }
+    pcb_size++;
 }
 
 // sets p->instruction
@@ -87,6 +93,7 @@ struct PCB* deletePCB(struct PCB* p) {
         tail = temp;
         p = NULL;
     }
+    pcb_size--;
 
     return deletedNode;
 }
@@ -164,6 +171,7 @@ void rearrangeSJF() {
 
         // find node
         while(temp) {
+            shortest_length = INT_MAX;
             if(temp->length < shortest_length) {
                 shortest_length = temp->length;
                 node = temp;
@@ -267,32 +275,59 @@ void schedulerLogic(char *files[], int files_size) {
     // step 1 : for all files, create a PCB and add to ready queue (linked list)
     int i = 0;
 
-    for(int j = 1; j < files_size-1; j++) {
-
-        int new_pos = load(files[j], i);
-        int length = new_pos-i+1;
-        struct PCB* p = PCBinitialize(i, length);
-        addPCBToReadyQueue(p);
-        i = new_pos+1;
-    }
-
     // works up to here
 
     if (strcmp(files[files_size-1], "SJF") == 0)
     {
+        for(int j = 1; j < files_size-1; j++) {
+
+            int new_pos = load(files[j], i);
+            int length = new_pos-i+1;
+            struct PCB* p = PCBinitialize(i, length);
+            addPCBToReadyQueue(p);
+            i = new_pos+1;
+        }
         sjf();
     }
     else if (strcmp(files[files_size-1], "RR") == 0)
     {
+        for(int j = 1; j < files_size-1; j++) {
+
+            int new_pos = load(files[j], i);
+            int length = new_pos-i+1;
+            struct PCB* p = PCBinitialize(i, length);
+            addPCBToReadyQueue(p);
+            i = new_pos+1;
+        }
         rr();
     }
     else if (strcmp(files[files_size-1], "AGING") == 0)
     {
+        for(int j = 1; j < files_size-1; j++) {
+
+            int new_pos = load(files[j], i);
+            int length = new_pos-i+1;
+            struct PCB* p = PCBinitialize(i, length);
+            addPCBToReadyQueue(p);
+            i = new_pos+1;
+        }
         aging();
+    }
+    else if (strcmp(files[files_size-1], "FCFS") == 0)
+    {
+        for(int j = 1; j < files_size-1; j++) {
+
+            int new_pos = load(files[j], i);
+            int length = new_pos-i+1;
+            struct PCB* p = PCBinitialize(i, length);
+            addPCBToReadyQueue(p);
+            i = new_pos+1;
+        }
+        fcfs();
     }
     else
     {
-        fcfs();
+        badcommand();
     }
 }
 
@@ -318,7 +353,7 @@ void fcfs() {
 }
 
 void sjf() {
-    rearrangeSJF();
+    //rearrangeSJF();
     // for string parsing
     char instr[1000];
     // while there is a head
@@ -363,25 +398,107 @@ void rr() {
     }
 }
 
+void decrementScore() {
+    if (head == NULL) {
+        return;
+    }
+
+    struct PCB *temp = head;
+//    printf("PID: %d \tSCORE: %d\n", head->PID, head->job_length_score);
+
+    while (temp != NULL) {
+        if (temp->job_length_score > 0 && temp->PID != head->PID) {
+            temp->job_length_score--;
+//            printf("PID: %d \tSCORE: %d\n", temp->PID, temp->job_length_score);
+        }
+
+        temp = temp->next; 
+    }
+}
+
+struct PCB* dequeue() {
+    if (head == NULL) {
+        return NULL;
+    }
+
+    struct PCB *temp = head;
+    head = head->next;
+    pcb_size--;
+
+    return temp;
+}
+
+
+
 void aging() {
-    // for string parsing
-    char* instr = NULL;
-    // while there is a head
+    // // for string parsing
+    // char* instr = NULL;
+    // // while there is a head
+    // while(1) {
+    //     struct PCB* p = getHeadReadyQueueAging();    // extract the head
+    //     if(!p) {
+    //         break;
+    //     }
+    //     // set current instruction to start instruction
+    //     current_instruction(p, p->start);
+    //     int end_of_file = p->start + p->length;
+    //     int count = 0;
+
+    //     while(p->instruction < end_of_file && count < 1) {   // aging: performs just like fcfs from here on with count
+    //         sprintf(instr, "%d", p->instruction);
+    //         parseInput(mem_get_value(instr));
+    //         p->instruction++;
+    //         count++;
+    //     }
+    // }
+
+    char instr[1000];
+
     while(1) {
-        struct PCB* p = getHeadReadyQueueAging();    // extract the head
-        if(!p) {
+        // rearrangeSJF();
+        struct PCB* p = getHeadReadyQueueSJF();
+        if(p == NULL) {
             break;
         }
-        // set current instruction to start instruction
+
         current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
         int count = 0;
 
-        while(p->instruction < end_of_file && count < 1) {   // aging: performs just like fcfs from here on with count
+        while(p->instruction < end_of_file) {   // aging: performs just like fcfs from here on with count (&& count < 1)
             sprintf(instr, "%d", p->instruction);
             parseInput(mem_get_value(instr));
+            // if(p->instruction == end_of_file) {
+            //     deletePCB(p);
+            // }
+
+            // if (head->instruction > (head->start + head->length)) {
+            //     dequeue();
+            // }
+            // decrementScore();
+            // rearrangeSJF();
             p->instruction++;
-            count++;
+            // count++;
         }
     }
+
+    // char instr[1000];
+    // //rearrangeSJF();
+    // struct PCB* p = getHeadReadyQueueSJF();
+
+    // current_instruction(p, p->start);
+    // int end_of_file = p->start + p->length;
+
+    // while(getPCBSize() > 0) {
+    //     //struct PCB* p = getHeadReadyQueueSJF();
+    //     sprintf(instr, "%d", p->instruction);
+    //     parseInput(mem_get_value(instr));
+    //     if(head->instruction > (head->start + head->length)) {
+    //         dequeue();
+    //     }
+    //     decrementScore();
+    //     rearrangeSJF();
+    // }
+    
+
 }

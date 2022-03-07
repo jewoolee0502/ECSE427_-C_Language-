@@ -22,6 +22,7 @@ void addPCBToReadyQueue(struct PCB* p);
 void current_instruction(struct PCB* p, int line_number);
 void link_PCB(struct PCB* p, struct PCB* next_PCB);
 void rearrangeSJF();
+void rearrangeAging();
 struct PCB* findPCBHead();
 struct PCB* deletePCB(struct PCB* p);
 struct PCB* clonePCB(struct PCB *p);

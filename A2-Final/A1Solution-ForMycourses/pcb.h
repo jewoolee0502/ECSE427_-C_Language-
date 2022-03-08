@@ -14,14 +14,16 @@ struct PCB {
 
 struct PCB* PCBinitialize(int start, int end);
 
+int getPCBsize();
 void addPCBToReadyQueue(struct PCB* p);
-// int removePCBFromReadyQueue();
-// int executeQueue();
 
 void current_instruction(struct PCB* p, int line_number);
 void link_PCB(struct PCB* p, struct PCB* next_PCB);
+void rearrangeSJF();
+void rearrangeAging();
 struct PCB* findPCBHead();
 struct PCB* deletePCB(struct PCB* p);
+struct PCB* clonePCB(struct PCB *p);
 
 void cleanUp();
 

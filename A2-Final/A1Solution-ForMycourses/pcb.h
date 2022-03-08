@@ -16,8 +16,6 @@ struct PCB* PCBinitialize(int start, int end);
 
 int getPCBsize();
 void addPCBToReadyQueue(struct PCB* p);
-// int removePCBFromReadyQueue();
-// int executeQueue();
 
 void current_instruction(struct PCB* p, int line_number);
 void link_PCB(struct PCB* p, struct PCB* next_PCB);

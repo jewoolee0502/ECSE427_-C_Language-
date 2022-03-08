@@ -14,6 +14,7 @@ int quit();
 int badcommand();
 int badcommandTooManyTokens();
 int badcommandFileDoesNotExist();
+int badcommandSameFileName();
 int set(char* var, char* value);
 int print(char* var);
 int run(char* script);
@@ -113,6 +114,11 @@ int badcommandFileDoesNotExist(){
 	return 3;
 }
 
+int badcommandSameFileName() {
+	printf("%s\n", "Bad command: same file name");
+	return 4;
+}
+
 int set(char* var, char* value){
 
 	char *link = "=";
@@ -195,7 +201,14 @@ int echo(char* var){
 }
 
 int exec(char* arg[], int args_size) {
+	for(int i = 1; i < args_size; i++) {
+		for(int j = 2; j < args_size - 1; j++) {
+			if(arg[i] == arg[j]) {
+				return badcommandSameFileName();
+			}
+		}
+		
+	}
 	schedulerLogic(arg, args_size);
 	return 0;
 }
-

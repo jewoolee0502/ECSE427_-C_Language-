@@ -215,6 +215,12 @@ struct PCB* getHeadReadyQueueAging() {
         tail = NULL;
         return NULL;
     }
+    if(head->job_length_score == 0) {
+        output = head;
+        head = head->next;
+        output->next = NULL;
+        return output;
+    }
 
     rearrangeAging();
     // get output (old head)
@@ -379,7 +385,6 @@ void rr() {
             break;
         }
         // set current instruction to start instruction
-        // current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
         int rr_counter = 0;
 
@@ -398,12 +403,10 @@ void decrementScore() {
     }
 
     struct PCB *temp = head;
-//    printf("PID: %d \tSCORE: %d\n", head->PID, head->job_length_score);
 
     while (temp != NULL) {
         if (temp->job_length_score > 0 && temp->PID != head->PID) {
             temp->job_length_score--;
-//            printf("PID: %d \tSCORE: %d\n", temp->PID, temp->job_length_score);
         }
 
         temp = temp->next; 
@@ -425,28 +428,6 @@ struct PCB* dequeue() {
 
 
 void aging() {
-
-    // // for string parsing
-    // char* instr = NULL;
-    // // while there is a head
-    // while(1) {
-    //     struct PCB* p = getHeadReadyQueueAging();    // extract the head
-    //     if(!p) {
-    //         break;
-    //     }
-    //     // set current instruction to start instruction
-    //     current_instruction(p, p->start);
-    //     int end_of_file = p->start + p->length;
-    //     int count = 0;
-
-    //     while(p->instruction < end_of_file && count < 1) {   // aging: performs just like fcfs from here on with count
-    //         sprintf(instr, "%d", p->instruction);
-    //         parseInput(mem_get_value(instr));
-    //         p->instruction++;
-    //         count++;
-    //     }
-    // }
-
     rearrangeAging();
     // for string parsing
     char instr[1000];
@@ -459,21 +440,12 @@ void aging() {
         }
 
         // set current instruction to start instruction
-        // current_instruction(p, p->start);
         int end_of_file = p->start + p->length;
         int count = 0;
 
         while(count < 1 && p->instruction < end_of_file) {   // aging: performs just like fcfs from here on with count
             sprintf(instr, "%d", p->instruction);
             parseInput(mem_get_value(instr));
-            // if(p->instruction == end_of_file) {
-            //     deletePCB(p);
-            // }
-
-            // if (head->instruction > (head->start + head->length)) {
-            //     dequeue();
-            // }
-            // decrementScore();
             rearrangeAging();
 
             p->instruction++;
@@ -487,31 +459,13 @@ void aging() {
             head = p;
             
             while(temp) {
-                temp->job_length_score -= 1;
+                if(temp->job_length_score > 0) {
+                    temp->job_length_score -= 1;
+                }
                 temp = temp->next;
             }
         }
 
-
     }
-
-    // char instr[1000];
-    // //rearrangeSJF();
-    // struct PCB* p = getHeadReadyQueueSJF();
-
-    // current_instruction(p, p->start);
-    // int end_of_file = p->start + p->length;
-
-    // while(getPCBSize() > 0) {
-    //     //struct PCB* p = getHeadReadyQueueSJF();
-    //     sprintf(instr, "%d", p->instruction);
-    //     parseInput(mem_get_value(instr));
-    //     if(head->instruction > (head->start + head->length)) {
-    //         dequeue();
-    //     }
-    //     decrementScore();
-    //     rearrangeSJF();
-    // }
-    
 
 }

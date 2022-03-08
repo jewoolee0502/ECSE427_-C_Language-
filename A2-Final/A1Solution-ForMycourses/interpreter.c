@@ -201,14 +201,19 @@ int echo(char* var){
 }
 
 int exec(char* arg[], int args_size) {
-	for(int i = 1; i < args_size; i++) {
-		for(int j = 2; j < args_size - 1; j++) {
-			if(arg[i] == arg[j]) {
-				return badcommandSameFileName();
-			}
+	
+	if(args_size == 4) {
+		if(strcmp(arg[1], arg[2]) == 0) {
+			return badcommandSameFileName();
 		}
-		
+	} 
+	
+	else if(args_size == 5) {
+		if(strcmp(arg[1], arg[2]) == 0 || strcmp(arg[1], arg[3]) == 0 || strcmp(arg[2], arg[3]) == 0) {
+			return badcommandSameFileName();
+		}
 	}
+	
 	schedulerLogic(arg, args_size);
 	return 0;
 }

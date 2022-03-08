@@ -226,13 +226,14 @@ struct PCB* getHeadReadyQueueAging() {
 }
 
 void rearrangeAging() {
-    if(head) {
+    if(head != NULL) {
         struct PCB* temp = head;        // temp = new head (temporary)
         struct PCB* node = head;        // node to be taken from the queue
-        int shortest_length = head->job_length_score;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
+        int shortest_length;  // will be updated throughout loop to ensure shortest_length is shortest length (temporary)
 
         // find node
-        while(temp) {
+        while(temp != NULL) {
+            shortest_length = head->job_length_score;
             if(temp->job_length_score < shortest_length) {
                 shortest_length = temp->job_length_score;
                 node = temp;
@@ -446,7 +447,7 @@ void aging() {
     //     }
     // }
 
-    rearrangeSJF();
+    rearrangeAging();
     // for string parsing
     char instr[1000];
     // while there is a head
@@ -473,18 +474,20 @@ void aging() {
             //     dequeue();
             // }
             // decrementScore();
-            // rearrangeSJF();
+            rearrangeAging();
+
             p->instruction++;
             count++;
         }
         struct PCB* temp = head;
+
         // if (instruction valid) then add to front of ready queue
         if(p->instruction < end_of_file) {
             p->next = temp;
             head = p;
             
             while(temp) {
-                temp->job_length_score-=1;
+                temp->job_length_score -= 1;
                 temp = temp->next;
             }
         }

@@ -3,7 +3,8 @@
 #include<stdio.h>
 #include<stdbool.h>
 
-#define SHELL_MEM_LENGTH 1000
+// #define SHELL_MEM_LENGTH 1000
+#define SHELL_MEM_LENGTH 500
 
 struct memory_struct{
 	char *var;
@@ -12,14 +13,17 @@ struct memory_struct{
 
 struct memory_struct shellmemory[SHELL_MEM_LENGTH];
 
+struct memory_struct frameStore[500]; 
+struct memory_struct variableStore[500];
+
 // Shell memory functions
 
 void mem_init(){
 
 	int i;
 	for (i=0; i<SHELL_MEM_LENGTH; i++){		
-		shellmemory[i].var = "none";
-		shellmemory[i].value = "none";
+		variableStore[i].var = "none";
+		variableStore[i].value = "none";
 	}
 }
 
@@ -29,17 +33,17 @@ void mem_set_value(char *var_in, char *value_in) {
 	int i;
 
 	for (i=0; i<SHELL_MEM_LENGTH; i++){
-		if (strcmp(shellmemory[i].var, var_in) == 0){
-			shellmemory[i].value = strdup(value_in);
+		if (strcmp(variableStore[i].var, var_in) == 0){
+			variableStore[i].value = strdup(value_in);
 			return;
 		} 
 	}
 
 	//Value does not exist, need to find a free spot.
 	for (i=0; i<SHELL_MEM_LENGTH; i++){
-		if (strcmp(shellmemory[i].var, "none") == 0){
-			shellmemory[i].var = strdup(var_in);
-			shellmemory[i].value = strdup(value_in);
+		if (strcmp(variableStore[i].var, "none") == 0){
+			variableStore[i].var = strdup(var_in);
+			variableStore[i].value = strdup(value_in);
 			return;
 		} 
 	}
@@ -53,8 +57,8 @@ char *mem_get_value(char *var_in) {
 	int i;
 
 	for (i=0; i<SHELL_MEM_LENGTH; i++){
-		if (strcmp(shellmemory[i].var, var_in) == 0){
-			return strdup(shellmemory[i].value);
+		if (strcmp(variableStore[i].var, var_in) == 0){
+			return strdup(variableStore[i].value);
 		} 
 	}
 	return "Variable does not exist";
@@ -62,14 +66,14 @@ char *mem_get_value(char *var_in) {
 }
 
 char* mem_get_value_by_line(int line){
-	return shellmemory[line].value;
+	return variableStore[line].value;
 }
 
 
 void clean_mem(int start, int end){
     for(int i = start; i <= end; i ++){
-        shellmemory[i].var = "none";
-		shellmemory[i].value = "none";
+        variableStore[i].var = "none";
+		variableStore[i].value = "none";
     }
 }
 
@@ -98,7 +102,7 @@ int add_file_to_mem(FILE* fp, int* pStart, int* pEnd, char* fileID)
 	bool hasSpaceLeft = false;
 
     for (i = 100; i < SHELL_MEM_LENGTH; i++){
-        if(strcmp(shellmemory[i].var,"none") == 0){
+        if(strcmp(frameStore[i].var,"none") == 0){
             *pStart = (int)i;
 			hasSpaceLeft = true;
             break;
@@ -118,8 +122,8 @@ int add_file_to_mem(FILE* fp, int* pStart, int* pEnd, char* fileID)
             break;
         }else{
             fgets(line, 999, fp);
-			shellmemory[j].var = strdup(fileID);
-            shellmemory[j].value = strdup(line);
+			frameStore[j].var = strdup(fileID);
+            frameStore[j].value = strdup(line);
         }
     }
 
@@ -128,8 +132,8 @@ int add_file_to_mem(FILE* fp, int* pStart, int* pEnd, char* fileID)
 		error_code = 21;
 		//clean up the file in memory
 		for(int j = 1; i <= SHELL_MEM_LENGTH; i ++){
-			shellmemory[j].var = "none";
-			shellmemory[j].value = "none";
+			frameStore[j].var = "none";
+			frameStore[j].value = "none";
     	}
 		return error_code;
 	}

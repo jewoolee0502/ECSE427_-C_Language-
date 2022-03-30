@@ -24,6 +24,7 @@ int run(char* script);
 int exec(char *fname1, char *fname2, char *fname3, char* policy);
 int my_ls();
 int echo();
+int resetmem();
 
 int interpreter(char* command_args[], int args_size){
 	int i;
@@ -84,9 +85,13 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 2) return badcommand();
 		return my_ls();
 	
-	}else if (strcmp(command_args[0], "echo")==0) {
+	} else if (strcmp(command_args[0], "echo")==0) {
 		if (args_size > 2) return badcommand();
 		return echo(command_args[1]);
+	
+	} else if (strcmp(command_args[0], "resetmem")==0) {
+		if (args_size > 2) return badcommand();
+		return resetmem();
 	
 	} else return badcommand();
 }
@@ -104,6 +109,7 @@ run SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit(){
+	system("exec rm -r Backing_Store");
 	printf("%s\n", "Bye!");
 	exit(0);
 }
@@ -242,4 +248,8 @@ int echo(char* var){
 		printf("%s\n", var); 
 	}
 	return 0; 
+}
+
+int resetmem() {
+	mem_init();
 }

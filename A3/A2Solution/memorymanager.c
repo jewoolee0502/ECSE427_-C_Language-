@@ -55,5 +55,10 @@ int resetIndex() {
 }
 
 int loadProgramPages(FILE* file, int pageNum, int frameNum) {
-    
+
+}
+
+int findFreeFrame() {
+    //errCode = 0 success, errCode = 1 failure
+    int errCode = 0;
 }

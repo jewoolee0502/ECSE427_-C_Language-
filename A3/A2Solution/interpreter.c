@@ -93,7 +93,7 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 2) return badcommand();
 		return resetmem();
 	
-	} else return badcommand();
+	} return badcommand(); //else return badcommand();
 }
 
 int help(){
@@ -252,4 +252,5 @@ int echo(char* var){
 
 int resetmem() {
 	mem_init();
+	return 0;
 }

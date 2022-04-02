@@ -13,8 +13,8 @@ struct memory_struct{
 
 struct memory_struct shellmemory[SHELL_MEM_LENGTH];
 
-struct memory_struct frameStore[500]; 
-struct memory_struct variableStore[500];
+struct memory_struct frameStore[SHELL_MEM_LENGTH]; 
+struct memory_struct variableStore[SHELL_MEM_LENGTH];
 
 // Shell memory functions
 
@@ -52,7 +52,7 @@ void mem_set_value(char *var_in, char *value_in) {
 
 }
 
-//get value based on input key
+//get value based on input key - variable store
 char *mem_get_value(char *var_in) {
 	int i;
 
@@ -69,6 +69,26 @@ char* mem_get_value_by_line(int line){
 	return variableStore[line].value;
 }
 
+//get value based on input key - frame store
+char *mem_get_value_fs(char *var_in) {
+	int i;
+
+	for (i=0; i<SHELL_MEM_LENGTH; i++){
+		if (strcmp(frameStore[i].var, var_in) == 0){
+			return strdup(frameStore[i].value);
+		} 
+	}
+	return "Variable does not exist";
+
+}
+
+char* mem_get_value_by_line_fs(int line){
+	return frameStore[line].value;
+}
+
+struct memory_struct get_frame_store() {
+	return frameStore;
+}
 
 void clean_mem(int start, int end){
     for(int i = start; i <= end; i ++){

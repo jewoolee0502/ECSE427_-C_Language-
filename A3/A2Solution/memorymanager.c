@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h> 
 
+#include <shellmemory.h>
+
 int index = 0;
 
 int codeLoading(FILE* file) {
@@ -10,7 +12,7 @@ int codeLoading(FILE* file) {
 
     //create a file in the Backing_Store
     char* fileName = generateFileName(index);
-    char directory[100] = "Backing_Store/";
+    char* directory = "Backing_Store/";
     strcat(directory, fileName);
 
     printf("New file, %s, is created in %s \n", fileName, directory);
@@ -50,15 +52,38 @@ char* generateFileName(int index) {
 }
 
 int resetIndex() {
-    index = 0;
+    index = 0;  //set index = 0
     return 0;
 }
 
 int loadProgramPages(FILE* file, int pageNum, int frameNum) {
-
+    char line[1000];
+    char buffer[1000];
+    char frame[1000];
+    int i = 0;
+    int j = 0;
+    int index = frameNum*3;
+    
+    while(i < pageNum*3) {
+        fgets(buffer, 999, file);
+        i++;
+    }
+    
+    while(fgets(line, 999, file) && j < 3) {
+        frame[index] = strdup(line);
+        index++;
+        j++;
+    }
 }
 
 int findFreeFrame() {
     //errCode = 0 success, errCode = 1 failure
     int errCode = 0;
+
+    int i = 0;
+    while(i < 500) {
+
+    }
+
+    return errCode;
 }

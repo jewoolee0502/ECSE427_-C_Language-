@@ -52,6 +52,14 @@ void mem_set_value(char *var_in, char *value_in) {
 
 }
 
+// Set key value pair
+void mem_set_value_fs(int index, char *value_in) {
+
+	frameStore[index].value = strdup(value_in);
+	return;
+
+}
+
 //get value based on input key - variable store
 char *mem_get_value(char *var_in) {
 	int i;
@@ -86,9 +94,10 @@ char* mem_get_value_by_line_fs(int line){
 	return frameStore[line].value;
 }
 
-struct memory_struct get_frame_store() {
-	return frameStore;
+char mem_get_value_by_line_fs_np(int line){
+	return frameStore[line].value;
 }
+
 
 void clean_mem(int start, int end){
     for(int i = start; i <= end; i ++){

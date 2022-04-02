@@ -6,7 +6,7 @@
 
 int index = 0;
 
-int codeLoading(FILE* file) {
+char* codeLoading(FILE* file) {
     //errCode = 0 success, errCode = 1 failure
     int errCode = 0;
 
@@ -24,7 +24,7 @@ int codeLoading(FILE* file) {
     if(!newFile) {
         printf("error: The file %s cannot be opened in the directory: %s", fileName, directory);
         errCode = 1;
-        return errCode;
+        return "";
     }
 
     //copying info into the new file
@@ -37,7 +37,7 @@ int codeLoading(FILE* file) {
 
     index++;
 
-    return errCode;
+    return directory;
 }
 
 char* generateFileName(int index) {
@@ -89,11 +89,13 @@ int loadFilesIntoFrameStore(char* fileArr) {
     char* fileNames[numFiles];
     for(int i = 0; i < numInputs; i++) {
         if(fileArr[i]!=NULL) {
-            fileNames[numFiles-i] = fileArr[i];   // reversed order
             FILE *fp = fopen(fileArr[i], "rt");
+            char* newName = codeLoading(fp);
+            FILE *fp = fopen(newName, "rt");
             fseek(fp, 0L, SEEK_END);
             int size = ftell(fp);
             fseek(fp, 0L, SEEK_SET);    // probably not necessary
+            fileNames[numFiles-i] = newName;   // reversed order
             lengths[numFiles-i] = size;
         }
     }
@@ -104,10 +106,12 @@ int loadFilesIntoFrameStore(char* fileArr) {
     while(notOver == 0) {
         int notOverCount = 0;
         for(int i = 0; i < numFiles; i++) {
-            if(counters[i] == lengths[i]) {
+            char* pageTable[counters[i]/3][500];
+            if(counters[i] < lengths[i]) {
                 int frameStoreIndex = findFreeFrame();
-                FILE *fp = fopen(fileArr[i], "rt");
+                FILE *fp = fopen(fileNames[i], "rt");
                 loadPageIntoFrameStore(fp, counters[i]/3);
+
                 counters[i]+=3;
             } else {
                 notOverCount += 1;

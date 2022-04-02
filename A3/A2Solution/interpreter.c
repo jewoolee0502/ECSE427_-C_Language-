@@ -198,6 +198,7 @@ int exec(char *fname1, char *fname2, char *fname3, char* policy){
 	arr[0] = fname1;
 	arr[1] = fname2;
 	arr[2] = fname3;
+	loadFilesIntoFrameStore(arr);
 
 	if(fname2!=NULL){
 		if(strcmp(fname1,fname2)==0){

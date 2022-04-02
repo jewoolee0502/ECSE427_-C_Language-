@@ -3,7 +3,6 @@
 #include<stdio.h>
 #include<stdbool.h>
 
-// #define SHELL_MEM_LENGTH 1000
 #define SHELL_MEM_LENGTH 500
 
 struct memory_struct{

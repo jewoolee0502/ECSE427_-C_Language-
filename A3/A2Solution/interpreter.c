@@ -92,8 +92,8 @@ int interpreter(char* command_args[], int args_size){
 	} else if (strcmp(command_args[0], "resetmem")==0) {
 		if (args_size > 2) return badcommand();
 		return resetmem();
-	
-	} else return badcommand();
+	}
+	return badcommand();
 }
 
 int help(){
@@ -252,4 +252,5 @@ int echo(char* var){
 
 int resetmem() {
 	mem_init();
+	return 0;
 }

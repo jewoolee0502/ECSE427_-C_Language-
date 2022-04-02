@@ -15,11 +15,11 @@ int parseInput(char ui[]);
 
 int main(int argc, char *argv[]) {
 
-	if(0 != access("Backing_Store", F_OK)) {
+	if(0 != access("Backing_Store", F_OK)) {	// check if backing store directory exists
 		system("mkdir Backing_Store");
 	}
 	else {
-		system("exec rm -r Backing_Store");
+		system("exec rm -r Backing_Store");		// remove and recreate backing store directory
 		system("mkdir Backing_Store");
 	}
 

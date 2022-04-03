@@ -15,3 +15,8 @@ PCB* makePCB(int start, int end, char* pid){
     newPCB->job_length_score = 1+end-start;
     return newPCB;
 }
+
+//     newPCB->maxPages = pageNum;
+//     for(int i = 0; i < pageNum; i++) {
+//         newPCB->pageTable[i] = -1;
+//     }

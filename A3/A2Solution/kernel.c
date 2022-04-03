@@ -199,7 +199,7 @@ int scheduler(int policyNumber){
             
             // int error_code_load_PCB_TO_CPU = cpu_run(cpu_quanta_per_program, firstPCB.end);
 
-            int error_code_load_PCB_TO_CPU = cpu_run_2(firstPCB);
+            int error_code_load_PCB_TO_CPU = cpu_run_2(&firstPCB);
 
             // if good to continue, pop and place at end, don't clear frame store
             if(error_code_load_PCB_TO_CPU == 1 || error_code_load_PCB_TO_CPU == 2) {

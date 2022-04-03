@@ -197,7 +197,18 @@ int scheduler(int policyNumber){
             PCB firstPCB = ready_queue_pop(0,false);
             load_PCB_TO_CPU(firstPCB.PC);
             
-            int error_code_load_PCB_TO_CPU = cpu_run(cpu_quanta_per_program, firstPCB.end);
+            // int error_code_load_PCB_TO_CPU = cpu_run(cpu_quanta_per_program, firstPCB.end);
+
+            int error_code_load_PCB_TO_CPU = cpu_run_2(firstPCB);
+
+            // if good to continue, pop and place at end, don't clear frame store
+            if(error_code_load_PCB_TO_CPU == 1 || error_code_load_PCB_TO_CPU == 2) {
+                ready_queue_pop(0, true);
+                ready_queue_add_to_end(&firstPCB);
+            } else {
+                clean_mem(firstPCB.index_cur_pt*3, firstPCB.index_cur_pt*3 + firstPCB.index_within_fs);
+                ready_queue_pop(0, true);
+            }
             
             if(error_code_load_PCB_TO_CPU == 2){
                 //the head PCB program has been done, time to reclaim the shell mem

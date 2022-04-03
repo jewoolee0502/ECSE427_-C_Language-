@@ -70,3 +70,37 @@ int cpu_run(int quanta, int end){
     error_code = 0;
     return error_code;
 }
+
+int cpu_run_2(PCB *aPCB) {
+    int quanta = 2;
+    int signal = 0;
+    while(quanta != 0) {
+        char* line = mem_get_value_by_line_fs(aPCB->page_table[aPCB->index_cur_pt+aPCB->index_within_fs]);
+        if(strcmp(line, "none") != 0) {
+            parseInput(line);
+            aPCB->index_within_fs += 1;
+            if(aPCB->index_within_fs > 2) {
+                // now need to check if end of program
+                signal = 1;
+                break;
+            }
+        } else {
+            // still inside but done -> meaning end of program
+            return 3;
+        }
+    quanta -= 1;
+    }
+    if(signal == 1) {
+        aPCB->index_cur_pt += 1;
+        if(aPCB->page_table[aPCB->index_cur_pt] == 0) {
+            // end of page table -> meaning end of program
+            return 3;
+        }
+        else {
+            return 2;
+        }
+    } else {
+        // still within frame; do not increment aPCB->index_cur_pt
+        return 1;
+    }
+}

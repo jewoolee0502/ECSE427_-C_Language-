@@ -121,7 +121,10 @@ int myinit(const char *filename){
     int* start = (int*)malloc(sizeof(int));
     int* end = (int*)malloc(sizeof(int));
     
+    // loads file into backing store
+    filename = codeLoading(filename);
     fp = fopen(filename, "rt");
+
     if(fp == NULL){
         error_code = 11; // 11 is the error code for file does not exist
         return error_code;
@@ -131,19 +134,23 @@ int myinit(const char *filename){
     char* fileID = (char*)malloc(32);
     sprintf(fileID, "%d", rand());
 
-    error_code = add_file_to_mem(fp, start, end, fileID);
-    if(error_code != 0){
-        fclose(fp);
-        return error_code;
-    }
+    // error_code = add_file_to_mem(fp, start, end, fileID);
+    // if(error_code != 0){
+    //     fclose(fp);
+    //     return error_code;
+    // }
     PCB* newPCB = makePCB(*start,*end,fileID);
     newPCB -> job_length_score = 1 + *end - *start;
+    newPCB -> fileName = filename;
 
     ready_queue_add_to_end(newPCB);
 
     fclose(fp);
 
-    return error_code;
+    if(error_code != 11) {
+        return filename;
+    }
+
 }
 
 int get_scheduling_policy_number(char* policy){
@@ -282,7 +289,7 @@ int scheduler(int policyNumber){
             }
             
             //if the first task job score is not the lowest, 
-            //then move the frst task to the end 
+            //then move the first task to the end 
             //and the lowest job score task to the front
             for(int i = 0; i < QUEUE_LENGTH; i++){
                 //get the lowest job length score

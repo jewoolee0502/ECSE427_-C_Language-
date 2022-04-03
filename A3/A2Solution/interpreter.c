@@ -219,16 +219,30 @@ int exec(char *fname1, char *fname2, char *fname3, char* policy){
 		return handleError(policyNumber);
 	}
 
+	// initialize a file array
+	char fileArr[3];
+	int index = 0;
+
     if(fname1 != NULL){
+		//	myinit loads file into the backing store
+		//	returns name of file as error_code
         error_code = myinit(fname1);
-		if(error_code != 0){
+		// only possible error code resultant is 11
+		if(error_code == 11){
 			return handleError(error_code);
+		} else {
+			fileArr[index] = error_code;
+			index+=1;
 		}
     }
     if(fname2 != NULL){
         error_code = myinit(fname2);
-		if(error_code != 0){
+		// only possible error code resultant is 11
+		if(error_code == 11){
 			return handleError(error_code);
+		} else {
+			fileArr[index] = error_code;
+			index+=1;
 		}
     }
     if(fname3 != NULL){
@@ -236,7 +250,14 @@ int exec(char *fname1, char *fname2, char *fname3, char* policy){
 		if(error_code != 0){
 			return handleError(error_code);
 		}
+		else {
+			fileArr[index] = error_code;
+			index+=1;
+		}
     }
+
+	// now, load programs into memory
+	loadFilesIntoFrameStore(fileArr);
     
 	scheduler(policyNumber);
 	return error_code;

@@ -28,6 +28,7 @@ int echo();
 int resetmem();
 
 int interpreter(char* command_args[], int args_size){
+
 	int i;
 
 	if ( args_size < 1 || args_size > MAX_ARGS_SIZE){
@@ -92,9 +93,10 @@ int interpreter(char* command_args[], int args_size){
 	
 	} else if (strcmp(command_args[0], "resetmem")==0) {
 		if (args_size > 2) return badcommand();
+		mem_init_fs();
 		return resetmem();
 	
-	} return badcommand(); //else return badcommand();
+	} else return badcommand(); //else return badcommand();
 }
 
 int help(){
@@ -106,6 +108,7 @@ set VAR STRING		Assigns a value to shell memory\n \
 print VAR		Displays the STRING assigned to VAR\n \
 run SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 	printf("%s\n", help_string);
+	printf("Frame Store Size = %d Variable Store Size = %d \n", FRAMESIZE, VARMEMSIZE);
 	return 0;
 }
 
@@ -179,26 +182,34 @@ int print(char* var){
 
 int run(char* script){
 	//errCode 11: bad command file does not exist
-	int errCode = 0;
+	char* errCode = "";
+	char f_name_1[100] = "";
 
 	//load script into shell
 	errCode = myinit(script);
-	if(errCode == 11){
-		return handleError(errCode);
+	if(strcmp(errCode, "11") == 0){
+		int toReturn = 0;
+		toReturn = strtol(errCode, NULL, 10);
+		return handleError(toReturn);
+	} else {
+		strcpy(f_name_1, errCode);
 	}
 
-	//run with FCFS
-	scheduler(0);
 
-	return errCode;
+	char* arr[] = {f_name_1, NULL, NULL};
+
+	mem_init_fs();
+	// Q1.2.3 now, load programs into memory
+	loadFilesIntoFrameStore(arr);
+	//run with RR
+	scheduler(2);
+
+	int toReturn = 0;
+	toReturn = strtol(errCode, NULL, 10);
+	return toReturn;
 }
 
 int exec(char *fname1, char *fname2, char *fname3, char* policy){
-	const char *arr[3];
-	arr[0] = fname1;
-	arr[1] = fname2;
-	arr[2] = fname3;
-	loadFilesIntoFrameStore(arr);
 
 	if(fname2!=NULL){
 		if(strcmp(fname1,fname2)==0){
@@ -211,56 +222,62 @@ int exec(char *fname1, char *fname2, char *fname3, char* policy){
 		}
 		
 	}
-
-    int error_code = 0;
+    char* error_code = "";
+	char f_name_1[100] = "";
+	char f_name_2[100] = "";
+	char f_name_3[100] = "";
 
 	int policyNumber = get_scheduling_policy_number(policy);
 	if(policyNumber == 15){
 		return handleError(policyNumber);
 	}
 
-	// initialize a file array
-	char fileArr[3];
-	int index = 0;
-
+	//	myinit loads file into the backing store
+	//	returns name of file as error_code
     if(fname1 != NULL){
-		//	myinit loads file into the backing store
-		//	returns name of file as error_code
         error_code = myinit(fname1);
 		// only possible error code resultant is 11
-		if(error_code == 11){
-			return handleError(error_code);
+		if(strcmp(error_code, "11") == 0){
+			int toReturn = 0;
+			toReturn = strtol(error_code, NULL, 10);
+			return handleError(toReturn);
 		} else {
-			fileArr[index] = error_code;
-			index+=1;
+			strcpy(f_name_1, error_code);
 		}
     }
     if(fname2 != NULL){
         error_code = myinit(fname2);
 		// only possible error code resultant is 11
-		if(error_code == 11){
-			return handleError(error_code);
+		if(strcmp(error_code, "11") == 0){
+			int toReturn = 0;
+			toReturn = strtol(error_code, NULL, 10);
+			return handleError(toReturn);
 		} else {
-			fileArr[index] = error_code;
-			index+=1;
+			strcpy(f_name_2, error_code);
 		}
     }
     if(fname3 != NULL){
         error_code = myinit(fname3);
-		if(error_code != 0){
-			return handleError(error_code);
+		if(strcmp(error_code, "11") == 0){
+			int toReturn = 0;
+			toReturn = strtol(error_code, NULL, 10);
+			return handleError(toReturn);
 		}
 		else {
-			fileArr[index] = error_code;
-			index+=1;
+			strcpy(f_name_3, error_code);
 		}
     }
 
-	// now, load programs into memory
-	loadFilesIntoFrameStore(fileArr);
+	char* arr[] = {f_name_1, f_name_2, f_name_3};
+
+	mem_init_fs();
+	// Q1.2.3 now, load programs into memory
+	loadFilesIntoFrameStore(arr);
     
 	scheduler(policyNumber);
-	return error_code;
+	int toReturn = 0;
+	// toReturn = strtol(error_code, NULL, 10);
+	return toReturn;
 }
 
 int my_ls(){
@@ -279,6 +296,6 @@ int echo(char* var){
 }
 
 int resetmem() {
-	mem_init();
+	mem_init_vs();
 	return 0;
 }

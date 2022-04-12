@@ -4,6 +4,7 @@
 #include "shell.h"
 #include "shellmemory.h"
 #include "interpreter.h"
+#include "memorymanager.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -15,6 +16,19 @@
 #define MAX_INT 2147483646
 PCB* readyQueue[QUEUE_LENGTH];
 
+PCB* get_ready_queue_at(int index) {
+    return readyQueue[index];
+}
+
+void printContentsOfReadyQueue() {
+    for(int i = 0; i < QUEUE_LENGTH; i++) {
+        PCB* cur = get_ready_queue_at(i);
+        // printf("file: %s\t", cur->fileName);
+        printf("num_lines: %d\t", cur->num_pages);
+    }
+    printf("\n");
+}
+
 void ready_queue_initialize()
 {
     for (size_t i = 0; i < QUEUE_LENGTH; ++i)
@@ -24,6 +38,13 @@ void ready_queue_initialize()
         (*readyQueue[i]).start = -1;
         (*readyQueue[i]).end = -1;
         (*readyQueue[i]).pid = NULL;
+        for(int j = 0; j < 100; j++) {
+            (*readyQueue[i]).page_table[j] = -1;
+        }
+        (*readyQueue[i]).index_init_pt = 0;
+        (*readyQueue[i]).index_within_fs = 0;
+        (*readyQueue[i]).index_cur_pt = 0;
+        (*readyQueue[i]).num_pages = 0;
         (*readyQueue[i]).job_length_score = -1;
     }
 }
@@ -35,6 +56,13 @@ void ready_queue_Empty(){
         (*readyQueue[i]).start = -1;
         (*readyQueue[i]).end = -1;
         (*readyQueue[i]).pid = NULL;
+        for(int j = 0; j < 100; j++) {
+            (*readyQueue[i]).page_table[j] = -1;
+        }
+        (*readyQueue[i]).index_init_pt = 0;
+        (*readyQueue[i]).index_within_fs = 0;
+        (*readyQueue[i]).index_cur_pt = 0;
+        (*readyQueue[i]).num_pages = 0;
         (*readyQueue[i]).job_length_score = -1;
     }
 }
@@ -56,11 +84,25 @@ PCB ready_queue_pop(int index, bool inPlace)
             (*readyQueue[i-1]).start = (*readyQueue[i]).start;
             (*readyQueue[i-1]).end = (*readyQueue[i]).end;
             (*readyQueue[i-1]).pid = (*readyQueue[i]).pid;
+            memcpy((*readyQueue[i-1]).page_table, (*readyQueue[i]).page_table, sizeof (*readyQueue[i]).page_table);
+            (*readyQueue[i-1]).index_within_fs = (*readyQueue[i]).index_within_fs;
+            (*readyQueue[i-1]).index_init_pt = (*readyQueue[i]).index_init_pt;
+            (*readyQueue[i-1]).index_cur_pt = (*readyQueue[i]).index_cur_pt;
+            (*readyQueue[i-1]).fileName = (*readyQueue[i]).fileName;
+            (*readyQueue[i-1]).num_pages = (*readyQueue[i]).num_pages;
             (*readyQueue[i-1]).job_length_score = (*readyQueue[i]).job_length_score;
         }
         (*readyQueue[QUEUE_LENGTH-1]).PC = -1;
         (*readyQueue[QUEUE_LENGTH-1]).start = -1;
         (*readyQueue[QUEUE_LENGTH-1]).end = -1;
+        for(int j = 0; j < 100; j++) {
+            (*readyQueue[QUEUE_LENGTH-1]).page_table[j] = -1;
+        }
+        (*readyQueue[QUEUE_LENGTH-1]).index_init_pt = 0;
+        (*readyQueue[QUEUE_LENGTH-1]).index_within_fs = 0;
+        (*readyQueue[QUEUE_LENGTH-1]).index_cur_pt = 0;
+        (*readyQueue[QUEUE_LENGTH-1]).fileName = NULL;
+        (*readyQueue[QUEUE_LENGTH-1]).num_pages = 0;
         (*readyQueue[QUEUE_LENGTH-1]).pid = NULL;
         (*readyQueue[QUEUE_LENGTH-1]).job_length_score = -1;
     }
@@ -75,6 +117,12 @@ void ready_queue_add_to_end(PCB *pPCB)
             (*readyQueue[i]).start = (*pPCB).start;
             (*readyQueue[i]).end = (*pPCB).end;
             (*readyQueue[i]).pid = (*pPCB).pid;
+            memcpy((*readyQueue[i]).page_table, (*pPCB).page_table, sizeof (*pPCB).page_table);
+            (*readyQueue[i]).index_init_pt = (*pPCB).index_init_pt;
+            (*readyQueue[i]).index_within_fs = (*pPCB).index_within_fs;
+            (*readyQueue[i]).index_cur_pt = (*pPCB).index_cur_pt;
+            (*readyQueue[i]).fileName = (*pPCB).fileName;
+            (*readyQueue[i]).num_pages = (*pPCB).num_pages;
             (*readyQueue[i]).job_length_score = (*pPCB).job_length_score;
             break;
         }
@@ -86,6 +134,12 @@ void ready_queue_add_to_front(PCB *pPCB){
         (*readyQueue[i]).PC = (*readyQueue[i-1]).PC;
         (*readyQueue[i]).start = (*readyQueue[i-1]).start;
         (*readyQueue[i]).end = (*readyQueue[i-1]).end;
+        memcpy((*readyQueue[i]).page_table, (*readyQueue[i-1]).page_table, sizeof (*readyQueue[i-1]).page_table);
+        (*readyQueue[i]).index_init_pt = (*readyQueue[i-1]).index_init_pt;
+        (*readyQueue[i]).index_within_fs = (*readyQueue[i-1]).index_within_fs;
+        (*readyQueue[i]).index_cur_pt = (*readyQueue[i-1]).index_cur_pt;
+        (*readyQueue[i]).fileName = (*readyQueue[i-1]).fileName;
+        (*readyQueue[i]).num_pages = (*readyQueue[i-1]).num_pages;
         (*readyQueue[i]).pid = (*readyQueue[i-1]).pid;
         (*readyQueue[i]).job_length_score = (*readyQueue[i-1]).job_length_score;
     }
@@ -93,6 +147,11 @@ void ready_queue_add_to_front(PCB *pPCB){
     (*readyQueue[0]).PC = (*pPCB).PC;
     (*readyQueue[0]).start = (*pPCB).start;
     (*readyQueue[0]).end = (*pPCB).end;
+    memcpy((*readyQueue[0]).page_table, (*pPCB).page_table, sizeof (*pPCB).page_table);
+    (*readyQueue[0]).index_init_pt = (*pPCB).index_init_pt;
+    (*readyQueue[0]).index_within_fs = (*pPCB).index_within_fs;
+    (*readyQueue[0]).index_cur_pt = (*pPCB).index_cur_pt;
+    (*readyQueue[0]).num_pages = (*pPCB).num_pages;
     (*readyQueue[0]).pid = (*pPCB).pid;
     (*readyQueue[0]).job_length_score = (*pPCB).job_length_score;
 }
@@ -112,21 +171,27 @@ void terminate_task_in_queue_by_index(int i){
     (*readyQueue[i]).end = -1; 
     (*readyQueue[i]).PC = -1; 
     (*readyQueue[i]).pid = NULL;
+    for(int j = 0; j < 100; j++) {
+        (*readyQueue[i]).page_table[j] = -1;
+    }
+    (*readyQueue[i]).index_init_pt = 0;
+    (*readyQueue[i]).index_within_fs = 0;
+    (*readyQueue[i]).index_cur_pt = 0;
+    (*readyQueue[i]).num_pages = 0;
     (*readyQueue[i]).job_length_score = -1;
 }
 
-int myinit(const char *filename){
+char* myinit(const char *filename){
     FILE* fp;
-    int error_code = 0;
+    char* error_code = "";
     int* start = (int*)malloc(sizeof(int));
     int* end = (int*)malloc(sizeof(int));
     
     // loads file into backing store
-    filename = codeLoading(filename);
-    fp = fopen(filename, "rt");
+    char* new_file_name = (char*) codeLoading((char*)filename);
 
     if(fp == NULL){
-        error_code = 11; // 11 is the error code for file does not exist
+        error_code = "11"; // 11 is the error code for file does not exist
         return error_code;
     }
 
@@ -140,16 +205,12 @@ int myinit(const char *filename){
     //     return error_code;
     // }
     PCB* newPCB = makePCB(*start,*end,fileID);
-    newPCB -> job_length_score = 1 + *end - *start;
-    newPCB -> fileName = filename;
+    newPCB->job_length_score = 1 + *end - *start;
+    newPCB->fileName = strdup(new_file_name);
 
     ready_queue_add_to_end(newPCB);
 
-    fclose(fp);
-
-    if(error_code != 11) {
-        return filename;
-    }
+    return new_file_name;
 
 }
 
@@ -190,25 +251,57 @@ int scheduler(int policyNumber){
     }
 
     //scheduling logic for 0: FCFS and 2: RR
-    if(policyNumber == 0 || policyNumber == 2){
+    // printContentsOfFrameStore();
+    // printContentsOfReadyQueue();
+    if(policyNumber == 2){
+        //keep running programs while ready queue is not empty
+        while(ready_queue_pop(0,false).PC != -1)
+        {
+            PCB aPCB = ready_queue_pop(0,false);
+
+            // case 2.3
+            if(aPCB.page_table[aPCB.index_cur_pt] == -1 && aPCB.index_cur_pt < aPCB.num_pages) {
+                int frameStoreIndex = loadPageIntoFrameStore(aPCB.fileName, (aPCB.index_cur_pt)*3);
+                if(frameStoreIndex != -1) {
+                    aPCB.page_table[aPCB.index_cur_pt] = frameStoreIndex/3;
+                } else {
+                    int victim_index = evict_LRU();
+                    // load into frame store
+                    int frame_store_index = loadPageIntoFrameStore(aPCB.fileName, (aPCB.index_cur_pt)*3);
+                    aPCB.page_table[aPCB.index_cur_pt] = frame_store_index/3;
+                    set_index_LRU(aPCB.page_table[aPCB.index_cur_pt], 0);
+                }
+                // place at back of ready queue
+                ready_queue_pop(0, true);
+                ready_queue_add_to_end(&aPCB);
+            } else {
+            
+                int error_code_load_PCB_TO_CPU = cpu_run_3(&aPCB);
+
+                // if good to continue, pop and place at end, don't clear frame store
+                ready_queue_pop(0, true);
+                if(error_code_load_PCB_TO_CPU == 1) {
+                    ready_queue_add_to_end(&aPCB);
+                }
+                // printContentsOfFrameStore();
+            }
+            // printContentsOfReadyQueue();
+            // printContentsOfFrameStore();
+        }
+        // printContentsOfReadyQueue();
+        mem_init_fs();
+        frame_store_LRU_init();
+        // printContentsOfFrameStore();
+    }
+
+    if(policyNumber == 0){
         //keep running programs while ready queue is not empty
         while(ready_queue_pop(0,false).PC != -1)
         {
             PCB firstPCB = ready_queue_pop(0,false);
             load_PCB_TO_CPU(firstPCB.PC);
             
-            // int error_code_load_PCB_TO_CPU = cpu_run(cpu_quanta_per_program, firstPCB.end);
-
-            int error_code_load_PCB_TO_CPU = cpu_run_2(&firstPCB);
-
-            // if good to continue, pop and place at end, don't clear frame store
-            if(error_code_load_PCB_TO_CPU == 1 || error_code_load_PCB_TO_CPU == 2) {
-                ready_queue_pop(0, true);
-                ready_queue_add_to_end(&firstPCB);
-            } else {
-                clean_mem(firstPCB.index_cur_pt*3, firstPCB.index_cur_pt*3 + firstPCB.index_within_fs);
-                ready_queue_pop(0, true);
-            }
+            int error_code_load_PCB_TO_CPU = cpu_run(cpu_quanta_per_program, firstPCB.end);
             
             if(error_code_load_PCB_TO_CPU == 2){
                 //the head PCB program has been done, time to reclaim the shell mem

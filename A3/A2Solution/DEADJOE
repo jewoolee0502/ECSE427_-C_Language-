@@ -1,0 +1,29 @@
+
+*** These modified files were found in JOE when it aborted on Sun Apr  3 20:37:11 2022
+*** JOE was aborted by UNIX signal 1
+
+*** File '(Unnamed)'
+make
+
+*** File '* Build Log *'
+
+JOE: cd /home/2020/jxia11/A3/A3/A2Solution
+
+make: 'mysh' is up to date.
+
+JOE: [32mPASS[0m (exit status = 0)
+
+ls
+*** File '(Unnamed)'
+wq
+quit
+
+*** File '(Unnamed)'
+/home/2020/jxia11/.gitconfig
+* Build Log *
+
+*** File '* Startup Log *'
+Processing '/etc/joe/editorrc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/editorrc

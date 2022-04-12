@@ -6,8 +6,10 @@
 void ready_queue_initialize();
 
 int get_scheduling_policy_number(char* policy);
+PCB* get_ready_queue_at(int index);
+void printContentsOfReadyQueue();
 
-int myinit(const char *filename);
+char* myinit(const char *filename);
 int scheduler();
 
 #endif

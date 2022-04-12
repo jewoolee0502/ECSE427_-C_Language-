@@ -3,6 +3,7 @@
 #include <string.h> 
 #include <stdbool.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "interpreter.h"
 #include "shellmemory.h"
@@ -13,6 +14,14 @@ int MAX_USER_INPUT = 1000;
 int parseInput(char ui[]);
 
 int main(int argc, char *argv[]) {
+
+	if(0 != access("Backing_Store", F_OK)) {
+		system("mkdir Backing_Store");
+	}
+	else {
+		system("exec rm -r Backing_Store");
+		system("mkdir Backing_Store");
+	}
 
 	printf("%s\n", "Shell version 1.1 Created January 2022");
 	help();
@@ -26,7 +35,9 @@ int main(int argc, char *argv[]) {
 		userInput[i] = '\0';
 	
 	//init shell memory
-	mem_init();
+	mem_init_vs();
+	mem_init_fs();
+	frame_store_LRU_init();
 
 	ready_queue_initialize();
 

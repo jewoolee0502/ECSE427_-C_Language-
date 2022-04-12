@@ -3,6 +3,7 @@
 #include <string.h> 
 
 #include "shellmemory.h"
+#include "memorymanager.h"
 #include "shell.h"
 #include "kernel.h"
 
@@ -24,8 +25,10 @@ int run(char* script);
 int exec(char *fname1, char *fname2, char *fname3, char* policy);
 int my_ls();
 int echo();
+int resetmem();
 
 int interpreter(char* command_args[], int args_size){
+
 	int i;
 
 	if ( args_size < 1 || args_size > MAX_ARGS_SIZE){
@@ -84,11 +87,16 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 2) return badcommand();
 		return my_ls();
 	
-	}else if (strcmp(command_args[0], "echo")==0) {
+	} else if (strcmp(command_args[0], "echo")==0) {
 		if (args_size > 2) return badcommand();
 		return echo(command_args[1]);
 	
-	} else return badcommand();
+	} else if (strcmp(command_args[0], "resetmem")==0) {
+		if (args_size > 2) return badcommand();
+		mem_init_fs();
+		return resetmem();
+	
+	} else return badcommand(); //else return badcommand();
 }
 
 int help(){
@@ -100,10 +108,12 @@ set VAR STRING		Assigns a value to shell memory\n \
 print VAR		Displays the STRING assigned to VAR\n \
 run SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 	printf("%s\n", help_string);
+	printf("Frame Store Size = %d Variable Store Size = %d \n", FRAMESIZE, VARMEMSIZE);
 	return 0;
 }
 
 int quit(){
+	system("exec rm -r Backing_Store");
 	printf("%s\n", "Bye!");
 	exit(0);
 }
@@ -172,21 +182,35 @@ int print(char* var){
 
 int run(char* script){
 	//errCode 11: bad command file does not exist
-	int errCode = 0;
+	char* errCode = "";
+	char f_name_1[100] = "";
 
 	//load script into shell
 	errCode = myinit(script);
-	if(errCode == 11){
-		return handleError(errCode);
+	if(strcmp(errCode, "11") == 0){
+		int toReturn = 0;
+		toReturn = strtol(errCode, NULL, 10);
+		return handleError(toReturn);
+	} else {
+		strcpy(f_name_1, errCode);
 	}
 
-	//run with FCFS
-	scheduler(0);
 
-	return errCode;
+	char* arr[] = {f_name_1, NULL, NULL};
+
+	mem_init_fs();
+	// Q1.2.3 now, load programs into memory
+	loadFilesIntoFrameStore(arr);
+	//run with RR
+	scheduler(2);
+
+	int toReturn = 0;
+	toReturn = strtol(errCode, NULL, 10);
+	return toReturn;
 }
 
 int exec(char *fname1, char *fname2, char *fname3, char* policy){
+
 	if(fname2!=NULL){
 		if(strcmp(fname1,fname2)==0){
 			return badcommand_same_file_name();
@@ -198,35 +222,62 @@ int exec(char *fname1, char *fname2, char *fname3, char* policy){
 		}
 		
 	}
-
-    int error_code = 0;
+    char* error_code = "";
+	char f_name_1[100] = "";
+	char f_name_2[100] = "";
+	char f_name_3[100] = "";
 
 	int policyNumber = get_scheduling_policy_number(policy);
 	if(policyNumber == 15){
 		return handleError(policyNumber);
 	}
 
+	//	myinit loads file into the backing store
+	//	returns name of file as error_code
     if(fname1 != NULL){
         error_code = myinit(fname1);
-		if(error_code != 0){
-			return handleError(error_code);
+		// only possible error code resultant is 11
+		if(strcmp(error_code, "11") == 0){
+			int toReturn = 0;
+			toReturn = strtol(error_code, NULL, 10);
+			return handleError(toReturn);
+		} else {
+			strcpy(f_name_1, error_code);
 		}
     }
     if(fname2 != NULL){
         error_code = myinit(fname2);
-		if(error_code != 0){
-			return handleError(error_code);
+		// only possible error code resultant is 11
+		if(strcmp(error_code, "11") == 0){
+			int toReturn = 0;
+			toReturn = strtol(error_code, NULL, 10);
+			return handleError(toReturn);
+		} else {
+			strcpy(f_name_2, error_code);
 		}
     }
     if(fname3 != NULL){
         error_code = myinit(fname3);
-		if(error_code != 0){
-			return handleError(error_code);
+		if(strcmp(error_code, "11") == 0){
+			int toReturn = 0;
+			toReturn = strtol(error_code, NULL, 10);
+			return handleError(toReturn);
+		}
+		else {
+			strcpy(f_name_3, error_code);
 		}
     }
+
+	char* arr[] = {f_name_1, f_name_2, f_name_3};
+
+	mem_init_fs();
+	// Q1.2.3 now, load programs into memory
+	loadFilesIntoFrameStore(arr);
     
 	scheduler(policyNumber);
-	return error_code;
+	int toReturn = 0;
+	// toReturn = strtol(error_code, NULL, 10);
+	return toReturn;
 }
 
 int my_ls(){
@@ -242,4 +293,9 @@ int echo(char* var){
 		printf("%s\n", var); 
 	}
 	return 0; 
+}
+
+int resetmem() {
+	mem_init_vs();
+	return 0;
 }
